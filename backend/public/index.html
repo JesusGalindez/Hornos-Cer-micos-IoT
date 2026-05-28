@@ -1,0 +1,1670 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control Cerámico IoT - SaaS Hornos</title>
+    
+    <!-- Tipografía Moderna desde Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- Biblioteca Chart.js desde CDN para Gráficos en Tiempo Real -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* Estilos Vanilla CSS Premium (Aesthetics Modernas y Glassmorphism) */
+        :root {
+            --bg-principal: #0b0c16;
+            --bg-tarjeta: rgba(22, 24, 47, 0.7);
+            --borde-tarjeta: rgba(255, 255, 255, 0.08);
+            --primario-brillo: #ff7b00;
+            --primario-degradado: linear-gradient(135deg, #ff9100 0%, #d400ff 100%);
+            --secundario-brillo: #00f3ff;
+            --texto-principal: #f3f4f6;
+            --texto-mutado: #9ca3af;
+            --sombra-neon: 0 0 20px rgba(255, 123, 0, 0.2);
+            --fuente: 'Outfit', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-principal);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(212, 0, 255, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(0, 243, 255, 0.06) 0%, transparent 40%);
+            color: var(--texto-principal);
+            font-family: var(--fuente);
+            min-height: 100vh;
+            padding: 2rem;
+            line-height: 1.5;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto 2rem auto;
+            border-bottom: 1px solid var(--borde-tarjeta);
+            padding-bottom: 1.5rem;
+        }
+
+        .marca {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icono-fuego {
+            font-size: 2rem;
+            animation: oscilar 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes oscilar {
+            from { transform: scale(1); filter: drop-shadow(0 0 2px var(--primario-brillo)); }
+            to { transform: scale(1.1); filter: drop-shadow(0 0 10px var(--primario-brillo)); }
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: var(--primario-degradado);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .contenedor-principal {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .contenedor-principal {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Tarjetas de Glassmorphism */
+        .tarjeta {
+            background: var(--bg-tarjeta);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--borde-tarjeta);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .tarjeta:hover {
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+        }
+
+        .tarjeta h2 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 4px solid var(--primario-brillo);
+            padding-left: 10px;
+        }
+
+        /* Gráfico */
+        .seccion-grafico {
+            position: relative;
+        }
+
+        .canvas-container {
+            width: 100%;
+            height: 380px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        /* Formulario y Controles */
+        .grupo-entrada {
+            margin-bottom: 1.2rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--texto-mutado);
+            margin-bottom: 0.4rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--borde-tarjeta);
+            border-radius: 8px;
+            padding: 0.8rem 1rem;
+            color: var(--texto-principal);
+            font-family: var(--fuente);
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primario-brillo);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 10px rgba(255, 123, 0, 0.15);
+        }
+
+        .inputs-fila {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        /* Botones Premium */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 0.9rem 1.5rem;
+            font-family: var(--fuente);
+            font-size: 1rem;
+            font-weight: 600;
+            color: #fff;
+            background: var(--primario-degradado);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--sombra-neon);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+            box-shadow: 0 0 30px rgba(255, 123, 0, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secundario {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--borde-tarjeta);
+            box-shadow: none;
+            margin-top: 10px;
+        }
+
+        .btn-secundario:hover {
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: none;
+        }
+
+        /* Tabla de Rampas */
+        .tabla-contenedor {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 1.5rem;
+            border-radius: 10px;
+            border: 1px solid var(--borde-tarjeta);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            text-align: left;
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.8rem 1rem;
+            font-weight: 600;
+            color: var(--texto-mutado);
+        }
+
+        td {
+            padding: 0.8rem 1rem;
+            border-top: 1px solid var(--borde-tarjeta);
+        }
+
+        .accion-eliminar {
+            color: #ef4444;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .accion-eliminar:hover {
+            color: #f87171;
+            text-decoration: underline;
+        }
+
+        /* Estado del Horno en Tiempo Real */
+        .estado-horno-widget {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--borde-tarjeta);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .punto-latente {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 10px #10b981;
+            display: inline-block;
+        }
+
+        .punto-latente.offline {
+            background: #ef4444;
+            box-shadow: 0 0 10px #ef4444;
+        }
+
+        .punto-latente.calentando {
+            background: #ff7b00;
+            box-shadow: 0 0 12px #ff7b00;
+            animation: parpadear 1s infinite alternate;
+        }
+
+        .punto-latente.enfriando {
+            background: #00f3ff;
+            box-shadow: 0 0 12px #00f3ff;
+            animation: parpadear 1.5s infinite alternate;
+        }
+
+        @keyframes parpadear {
+            from { opacity: 0.5; }
+            to { opacity: 1; }
+        }
+
+        .estado-texto {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        /* Controles de Filtros del Gráfico */
+        .controles-grafico {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .toggle-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0.6rem 1.2rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--borde-tarjeta);
+            color: var(--texto-mutado);
+            user-select: none;
+        }
+
+        .toggle-pill:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .toggle-pill.activo-programado {
+            background: rgba(255, 123, 0, 0.15);
+            border-color: var(--primario-brillo);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(255, 123, 0, 0.2);
+        }
+
+        .toggle-pill.activo-real {
+            background: rgba(0, 243, 255, 0.15);
+            border-color: var(--secundario-brillo);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+        }
+
+        /* Termómetro de Seguridad Visual */
+        .termometro-seccion {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--borde-tarjeta);
+            border-radius: 12px;
+            padding: 1.2rem;
+            margin-top: 1rem;
+        }
+
+        .termometro-tubo {
+            width: 14px;
+            height: 90px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .termometro-mercurio {
+            width: 100%;
+            height: 20%;
+            background: linear-gradient(to top, #00f3ff, #ff7b00, #d400ff);
+            position: absolute;
+            bottom: 0;
+            transition: height 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 8px;
+        }
+
+        .indicador-temp-valor {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--texto-principal);
+            line-height: 1;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Progreso de Rampa en Tiempo Real */
+        .progreso-quema-seccion {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--borde-tarjeta);
+            border-radius: 12px;
+            padding: 1.2rem;
+            margin-top: 1rem;
+        }
+
+        .progreso-barra-bg {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .progreso-barra-fill {
+            width: 0%;
+            height: 100%;
+            background: var(--primario-degradado);
+            transition: width 0.8s ease;
+            border-radius: 4px;
+        }
+
+        /* Select de Presets Premium */
+        .select-presets {
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(212, 0, 255, 0.3);
+            background: rgba(212, 0, 255, 0.05);
+            color: #f3f4f6;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .select-presets:hover {
+            background: rgba(212, 0, 255, 0.1);
+        }
+
+        .select-presets:focus {
+            border-color: #d400ff;
+            box-shadow: 0 0 10px rgba(212, 0, 255, 0.3);
+        }
+
+        /* Controles de Resolución Eje X (Estilo TradingView) */
+        .controles-resolucion {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 1rem;
+        }
+
+        .resolucion-pills {
+            display: flex;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 4px;
+            border-radius: 30px;
+            border: 1px solid var(--borde-tarjeta);
+        }
+
+        .resolucion-pill {
+            padding: 0.4rem 1.1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--texto-mutado);
+            user-select: none;
+        }
+
+        .resolucion-pill:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .resolucion-pill.activo {
+            background: var(--primario-degradado);
+            color: #fff;
+            box-shadow: 0 0 12px rgba(255, 123, 0, 0.35);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="marca">
+            <span class="icono-fuego">🔥</span>
+            <div>
+                <h1>CeramikCloud IoT</h1>
+                <p style="font-size: 0.8rem; color: var(--texto-mutado)">SaaS de Monitoreo & Control Multitenant</p>
+            </div>
+        </div>
+        <div style="text-align: right">
+            <p style="font-size: 0.85rem; color: var(--texto-mutado)">Usuario Conectado</p>
+            <p style="font-weight: 600; font-size: 0.95rem; color: var(--secundario-brillo)">Alberto Galíndez</p>
+        </div>
+    </header>
+
+    <main class="contenedor-principal">
+        <!-- SECCIÓN IZQUIERDA: GRÁFICO INTERACTIVO (HISTORIAL COMPLETO) -->
+        <section class="tarjeta seccion-grafico">
+            <h2>📈 Gráfico de Rampa e Historial de Telemetría (Minuto Cero al Final)</h2>
+            
+            <!-- Controles de Visibilidad de Capas de Gráfico -->
+            <div class="controles-grafico">
+                <div class="toggle-pill activo-programado" id="btnToggleProgramado" onclick="alternarVisibilidadDataset(0)">
+                    <span>🔥</span> Curva Programada: Visible
+                </div>
+                <div class="toggle-pill activo-real" id="btnToggleReal" onclick="alternarVisibilidadDataset(1)">
+                    <span>⚡</span> Telemetría en Vivo: Visible
+                </div>
+            </div>
+
+            <!-- Controles de Resolución Eje X (Estilo TradingView) -->
+            <div class="controles-resolucion">
+                <span style="font-size: 0.82rem; color: var(--texto-mutado); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Resolución Eje X:</span>
+                <div class="resolucion-pills">
+                    <div class="resolucion-pill activo" id="res-auto" onclick="cambiarResolucionX('auto')">Auto</div>
+                    <div class="resolucion-pill" id="res-10m" onclick="cambiarResolucionX('10m')">10 min</div>
+                    <div class="resolucion-pill" id="res-30m" onclick="cambiarResolucionX('30m')">30 min</div>
+                    <div class="resolucion-pill" id="res-1h" onclick="cambiarResolucionX('1h')">1h</div>
+                </div>
+            </div>
+
+            <div class="canvas-container">
+                <canvas id="graficoHornos"></canvas>
+            </div>
+
+            <!-- Widget de Estado en Tiempo Real -->
+            <div class="estado-horno-widget">
+                <div>
+                    <p style="font-size: 0.8rem; color: var(--texto-mutado)">Dispositivo Vinculado</p>
+                    <p style="font-weight: 600; font-size: 0.95rem">Horno Principal (b4578e9b)</p>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px">
+                    <span id="indicadorLed" class="punto-latente offline"></span>
+                    <span id="textoEstado" class="estado-texto" style="color: #ef4444">DESCONECTADO</span>
+                </div>
+            </div>
+
+            <!-- Termómetro de Seguridad Visual -->
+            <div class="termometro-seccion">
+                <div class="termometro-tubo">
+                    <div id="termometroMercurio" class="termometro-mercurio" style="height: 0%;"></div>
+                </div>
+                <div>
+                    <p style="font-size: 0.8rem; color: var(--texto-mutado); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">Termómetro de Seguridad</p>
+                    <div class="indicador-temp-valor"><span id="termometroValor">20</span><span style="font-size: 1.2rem; color: var(--texto-mutado)">°C</span></div>
+                    <p id="termometroAlerta" style="font-size: 0.75rem; color: #10b981; font-weight: 600; margin-top: 4px;">🌡️ Temperatura Ambiente Segura</p>
+                </div>
+            </div>
+
+            <!-- Progreso de la Rampa en Tiempo Real -->
+            <div class="progreso-quema-seccion">
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600;">
+                    <span style="color: var(--texto-mutado);">PROGRESO DE LA QUEMA</span>
+                    <span id="progresoTextoPaso" style="color: var(--primario-brillo);">Cargando Rampa...</span>
+                </div>
+                <div class="progreso-barra-bg">
+                    <div id="progresoBarraFill" class="progreso-barra-fill" style="width: 0%;"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--texto-mutado); margin-top: 6px;">
+                    <span id="progresoTextoTiempo">Tiempo transcurrido: 0 min</span>
+                    <span id="progresoTextoObjetivo">Objetivo: --°C</span>
+                </div>
+            </div>
+            
+            <p id="notificacionIntervalo" style="font-size: 0.85rem; color: var(--secundario-brillo); text-align: center; margin-top: 12px; font-weight: 600; min-height: 20px;"></p>
+        </section>
+
+        <!-- SECCIÓN DERECHA: CONFIGURADOR DE CURVAS -->
+        <section class="tarjeta" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+                <h2>⚙️ Diseñador de Curva de Quema</h2>
+                
+                <!-- Biblioteca de Presets de Quema Profesionales -->
+                <div class="grupo-entrada">
+                    <label for="selectPresets">📖 Cargar Plantilla de Quema Profesional</label>
+                    <select id="selectPresets" class="select-presets" onchange="cargarPresetQuema()">
+                        <option value="">⚙️ -- Seleccionar una plantilla preconfigurada --</option>
+                        <optgroup label="🏺 Plantillas de Quema Estándar" id="grupoPlantillasSistema">
+                            <option value="bizcocho">🏺 Bizcocho Cerámico Estándar (Lento a 960°C)</option>
+                            <option value="esmalte_baja">🎨 Esmaltado de Baja Temperatura (1020°C)</option>
+                        </optgroup>
+                        <optgroup label="💾 Plantillas Guardadas por el Usuario" id="grupoPlantillasUsuario">
+                            <!-- Inyectadas dinámicamente al cargar -->
+                        </optgroup>
+                    </select>
+                </div>
+
+                <!-- Acciones Contextuales de Plantillas del Usuario -->
+                <div id="accionesPlantillaUsuario" style="display: none; gap: 8px; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                    <button onclick="editarNombrePlantilla()" class="btn btn-secundario" style="flex: 1; padding: 0.5rem; font-size: 0.8rem; margin: 0;">✏️ Editar Nombre</button>
+                    <button onclick="guardarCambiosPlantilla()" class="btn" style="flex: 1; padding: 0.5rem; font-size: 0.8rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: none;" id="btnGuardarCambiosPlantilla">💾 Guardar Cambios</button>
+                    <button onclick="eliminarPlantillaUsuario()" class="btn btn-secundario" style="flex: 1; padding: 0.5rem; font-size: 0.8rem; color: #ef4444; border-color: rgba(239, 68, 68, 0.3); margin: 0;">❌ Eliminar</button>
+                </div>
+
+                <div class="grupo-entrada">
+                    <label for="nombreCurva">Nombre de la Curva</label>
+                    <input type="text" id="nombreCurva" value="Bizcocho Manual Rápido">
+                </div>
+
+                <form id="formularioPaso" onsubmit="agregarPaso(event)">
+                    <div class="inputs-fila">
+                        <div class="grupo-entrada">
+                            <label for="duracionMinutos">Duración (Minutos)</label>
+                            <input type="number" id="duracionMinutos" required min="1" max="1440" placeholder="Ej: 120">
+                        </div>
+                        <div class="grupo-entrada">
+                            <label for="temperaturaDestino">Temp. Objetivo (°C)</label>
+                            <input type="number" id="temperaturaDestino" required min="20" max="1300" placeholder="Ej: 600">
+                        </div>
+                    </div>
+                    <div class="inputs-fila">
+                        <div class="grupo-entrada" style="flex: 1;">
+                            <label for="accionHornoPaso">🔥 Estado del Horno</label>
+                            <select id="accionHornoPaso" style="border-color: rgba(0, 243, 255, 0.3); background: rgba(0, 243, 255, 0.05); font-weight: 600;">
+                                <option value="1" selected>🟢 Encendido (Calor Activo)</option>
+                                <option value="0">🛑 Apagado (Enfriamiento)</option>
+                            </select>
+                        </div>
+                        <div class="grupo-entrada" style="flex: 1;">
+                            <label for="limiteSsrPaso">⚡ Potencia Máx (Límite SSR %)</label>
+                            <input type="number" id="limiteSsrPaso" min="10" max="100" value="100" placeholder="Ej: 100" style="border-color: rgba(212, 0, 255, 0.3); background: rgba(212, 0, 255, 0.05); font-weight: 600;">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-secundario">➕ Añadir Paso a la Gráfica</button>
+                </form>
+
+                <div class="tabla-contenedor">
+                    <table id="tablaPasos">
+                        <thead>
+                            <tr>
+                                <th>Paso</th>
+                                <th>Duración</th>
+                                <th>Temp. Final</th>
+                                <th>Horno (Relé)</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Inyectado dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- HUD de Auditoría de Parámetros del Operador -->
+                <div id="hudAuditoria" style="margin-top: 1.5rem; background: rgba(0, 243, 255, 0.04); border: 1px dashed rgba(0, 243, 255, 0.2); border-radius: 12px; padding: 1rem;">
+                    <p style="font-size: 0.75rem; color: var(--texto-mutado); text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em; margin-bottom: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 4px;">📋 Auditoría de Parámetros del Operador</p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.85rem;">
+                        <div>⏱️ Duración Total: <span id="hudDuracion" style="font-weight: 600; color: var(--secundario-brillo)">--</span></div>
+                        <div>🌡️ Temp. Máxima: <span id="hudTempMax" style="font-weight: 600; color: var(--primario-brillo)">--</span></div>
+                    </div>
+                </div>
+
+                <!-- TEMPORIZADOR Y PROGRAMACIÓN DIFERIDA -->
+                <div id="cardTemporizador" style="margin-top: 1.5rem; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 1rem; backdrop-filter: blur(10px);">
+                    <p style="font-size: 0.75rem; color: var(--texto-mutado); text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em; margin-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 4px;">⏱️ Temporizador de Encendido/Apagado Diferido</p>
+                    
+                    <div class="grupo-entrada" style="margin-bottom: 12px;">
+                        <label for="modoTemporizador">Modo de Temporización</label>
+                        <select id="modoTemporizador" onchange="alternarModoTemporizador()" style="border-color: rgba(212, 0, 255, 0.3); background: rgba(212, 0, 255, 0.05); font-weight: 600;">
+                            <option value="inmediato" selected>🟢 Iniciar quema inmediatamente</option>
+                            <option value="diferido">⏱️ Programar hora exacta (Inicio/Fin automáticos)</option>
+                        </select>
+                    </div>
+
+                    <div id="inputsTemporizador" style="display: none; gap: 10px; margin-bottom: 10px; flex-direction: column;">
+                        <div class="grupo-entrada">
+                            <label for="progHoraInicio">⏱️ Programar Hora de Inicio</label>
+                            <input type="datetime-local" id="progHoraInicio" onchange="calcularTiemposTemporizador('inicio')">
+                        </div>
+                        <div class="grupo-entrada">
+                            <label for="progHoraFin">🛑 Programar Hora de Apagado (Fin)</label>
+                            <input type="datetime-local" id="progHoraFin" onchange="calcularTiemposTemporizador('fin')">
+                        </div>
+                        <div id="infoTemporizador" style="margin-top: 5px; font-size: 0.8rem; background: rgba(0, 243, 255, 0.05); border: 1px solid rgba(0, 243, 255, 0.15); padding: 8px; border-radius: 8px; color: #e5e7eb; display: none; line-height: 1.4;">
+                            <!-- Inyectado dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1.5rem">
+                    <button onclick="enviarAlHorno()" class="btn" id="btnProgramar">📤 Cargar Curva de Quema (Neon + MQTT)</button>
+                </div>
+            </div>
+
+            <!-- CONTROL DE OPERACIONES (INICIO / APAGADO DE EMERGENCIA / DESCONECTAR) -->
+            <div style="margin-top: 2rem; border-top: 1px solid var(--borde-tarjeta); padding-top: 1.5rem;">
+                <h3 style="font-size: 0.95rem; color: var(--texto-mutado); text-transform: uppercase; margin-bottom: 1rem; font-weight: 800; letter-spacing: 0.05em;">🕹️ Control de Operaciones en Vivo</h3>
+                
+                <div class="inputs-fila" style="margin-bottom: 15px;">
+                    <button onclick="enviarComando('INICIAR_QUEMA')" class="btn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);">🟢 Iniciar Quema</button>
+                    <button onclick="enviarComando('APAGAR_EMERGENCIA')" class="btn" style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);">🛑 Apagar Horno</button>
+                </div>
+                
+                <button onclick="desconectarAplicacion()" class="btn btn-secundario" id="btnDesconectar">🔌 Desconectar Aplicación</button>
+            </div>
+        </section>
+
+        <!-- SECCIÓN COMPLETA DE GUARDADO E HISTORIAL DE QUEMAS -->
+        <section class="tarjeta" style="grid-column: span 2; margin-top: 1rem;">
+            <h2>💾 Guardar Registro de Quema Actual (Neon.com)</h2>
+            <p style="color: var(--texto-mutado); font-size: 0.85rem; margin-bottom: 1.5rem;">Registra los tiempos y resultados de tu quema actual con notas detalladas para tu historial de producción.</p>
+            
+            <div class="inputs-fila" style="margin-bottom: 15px;">
+                <div class="grupo-entrada">
+                    <label for="guardarNombre">Nombre de la Quema</label>
+                    <input type="text" id="guardarNombre" value="Bizcocho Manual Rápido">
+                </div>
+                <div class="grupo-entrada">
+                    <label for="guardarNotas">Notas / Esmaltes y Arcilla usados</label>
+                    <input type="text" id="guardarNotas" placeholder="Ej: Arcilla refractaria, esmalte azul cobalto brillante...">
+                </div>
+            </div>
+            
+            <div class="inputs-fila" style="margin-bottom: 20px;">
+                <div class="grupo-entrada">
+                    <label for="guardarInicio">Día y Hora de Inicio</label>
+                    <input type="datetime-local" id="guardarInicio">
+                </div>
+                <div class="grupo-entrada">
+                    <label for="guardarFin">Día y Hora de Finalización</label>
+                    <input type="datetime-local" id="guardarFin">
+                </div>
+            </div>
+            
+            <button onclick="guardarRegistroQuema()" class="btn" style="background: linear-gradient(135deg, #d400ff 0%, #00f3ff 100%); box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);">💾 Guardar Registro en Neon.com</button>
+
+            <!-- TABLA DE HISTORIAL DE QUEMAS GUARDADAS -->
+            <h2 style="margin-top: 3.5rem; margin-bottom: 1.5rem; border-top: 1px solid var(--borde-tarjeta); padding-top: 2rem;">📚 Historial de Quemas Guardadas en Neon.com</h2>
+            <div class="tabla-contenedor">
+                <table id="tablaQuemasGuardadas">
+                    <thead>
+                        <tr>
+                            <th>Nombre de Quema</th>
+                            <th>Día y Fecha</th>
+                            <th>Inicio ──> Fin</th>
+                            <th>Temp. Máxima</th>
+                            <th>Notas de Producción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: var(--texto-mutado);">Cargando historial de quemas...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const usuarioId = "5a8288b2-132d-45db-9964-b040bf5ffbb7";
+        const dispositivoId = "b4578e9b-0081-42ab-ba41-d68a994abfe2";
+        
+        let rampasMemoria = [
+            { paso: 1, duracion_minutos: 60, temp_destino: 150, estado_horno: 1 },
+            { paso: 2, duracion_minutos: 120, temp_destino: 600, estado_horno: 1 },
+            { paso: 3, duracion_minutos: 180, temp_destino: 1020, estado_horno: 1 },
+            { paso: 4, duracion_minutos: 60, temp_destino: 1020, estado_horno: 1 }
+        ];
+
+        let chart;
+        let intervaloTelemetria;
+        let intervaloTiempoActual = 3000;
+        let monitoreoActivo = true;
+        let resolucionActivaX = 'auto';
+        
+        // Memoria para plantillas dinámicas guardadas por el usuario (Cargadas de LocalStorage si existen)
+        let plantillasUsuario = {};
+        try {
+            const guardadas = localStorage.getItem('plantillas_usuario');
+            if (guardadas) {
+                plantillasUsuario = JSON.parse(guardadas);
+            }
+        } catch(e) {
+            console.warn("No se pudo cargar localStorage para plantillas");
+        }
+        
+        // Registrar marcas temporales locales
+        let horaInicioQuema = null;
+        let temperaturaMaximaRegistrada = 20.0;
+
+        // Formatear fecha para inputs datetime-local
+        function obtenerFechaFormateada(fecha) {
+            const tzoffset = (new Date()).getTimezoneOffset() * 60000;
+            return (new Date(fecha - tzoffset)).toISOString().slice(0, 16);
+        }
+
+        // Inicializar el Gráfico
+        function inicializarGrafico() {
+            const ctx = document.getElementById('graficoHornos').getContext('2d');
+            const datosRampa = obtenerCoordenadasRampa(rampasMemoria);
+
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Curva Programada (°C)',
+                            data: datosRampa,
+                            borderColor: '#ff7b00',
+                            backgroundColor: 'rgba(255, 123, 0, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.1,
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Monitoreo Real (Neon) - Historial Completo',
+                            data: [],
+                            borderColor: '#00f3ff',
+                            backgroundColor: 'transparent',
+                            borderWidth: 4,
+                            fill: false,
+                            tension: 0.3,
+                            pointRadius: 2,
+                            pointHoverRadius: 5,
+                            yAxisID: 'y'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            title: {
+                                display: true,
+                                text: 'Tiempo Acumulado (Minutos)',
+                                color: '#9ca3af',
+                                font: { family: 'Outfit', size: 12 }
+                            },
+                            ticks: { 
+                                color: '#9ca3af',
+                                callback: function(value) {
+                                    if (resolucionActivaX === '1h') {
+                                        return (value / 60).toFixed(1).replace('.0', '') + ' h';
+                                    }
+                                    return value + ' m';
+                                }
+                            },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Temperatura (°C)',
+                                color: '#9ca3af',
+                                font: { family: 'Outfit', size: 12 }
+                            },
+                            min: 0,
+                            max: 1400,
+                            ticks: { color: '#9ca3af' },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#f3f4f6',
+                                font: { family: 'Outfit', size: 12 }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function obtenerCoordenadasRampa(segmentos) {
+            const coordenadas = [{ x: 0, y: 20 }];
+            let tiempoAcumulado = 0;
+            segmentos.forEach(s => {
+                tiempoAcumulado += parseFloat(s.duracion_minutos);
+                coordenadas.push({ x: tiempoAcumulado, y: parseFloat(s.temp_destino) });
+            });
+            return coordenadas;
+        }
+
+        function actualizarTablaUI() {
+            const tbody = document.getElementById('tablaPasos').querySelector('tbody');
+            tbody.innerHTML = '';
+
+            let totalMinutos = 0;
+            let tempMax = 20;
+
+            rampasMemoria.forEach((r, index) => {
+                totalMinutos += parseInt(r.duracion_minutos);
+                if (parseInt(r.temp_destino) > tempMax) {
+                    tempMax = parseInt(r.temp_destino);
+                }
+
+                // Normalizar propiedad de estado (default a 1 si no existiera)
+                if (r.estado_horno === undefined) r.estado_horno = 1;
+                if (r.limite_ssr === undefined) r.limite_ssr = 100;
+
+                const fila = document.createElement('tr');
+                fila.innerHTML = `
+                    <td style="font-weight: 600; color: var(--secundario-brillo)">Paso ${index + 1}</td>
+                    <td>${r.duracion_minutos} min</td>
+                    <td style="font-weight: 600">${r.temp_destino}°C</td>
+                    <td style="font-weight: 600; color: ${r.estado_horno === 1 ? '#10b981' : '#ef4444'}">
+                        ${r.estado_horno === 1 ? `🟢 ENCENDIDO (${r.limite_ssr}%)` : '🛑 APAGADO'}
+                    </td>
+                    <td><button onclick="eliminarPaso(${index})" class="accion-eliminar">Eliminar</button></td>
+                `;
+                tbody.appendChild(fila);
+            });
+
+            // Actualizar HUD Informativo de Auditoría
+            document.getElementById('hudDuracion').innerText = `${totalMinutos} min`;
+            document.getElementById('hudTempMax').innerText = `${tempMax}°C`;
+
+            // Mantener sinc del temporizador diferido si está activo
+            calcularTiemposTemporizador('inicio');
+        }
+
+        function agregarPaso(event) {
+            event.preventDefault();
+            const duracion = parseInt(document.getElementById('duracionMinutos').value);
+            const temperatura = parseInt(document.getElementById('temperaturaDestino').value);
+            const accion = parseInt(document.getElementById('accionHornoPaso').value);
+            const limiteSsr = parseInt(document.getElementById('limiteSsrPaso').value) || 100;
+
+            rampasMemoria.push({
+                paso: rampasMemoria.length + 1,
+                duracion_minutos: duracion,
+                temp_destino: temperatura,
+                estado_horno: accion,
+                limite_ssr: limiteSsr
+            });
+
+            document.getElementById('duracionMinutos').value = '';
+            document.getElementById('temperaturaDestino').value = '';
+            document.getElementById('accionHornoPaso').value = "1"; // Reset a Encendido
+            document.getElementById('limiteSsrPaso').value = "100"; // Reset a 100%
+
+            actualizarGraficaObjetivo();
+            actualizarTablaUI();
+        }
+
+        function eliminarPaso(index) {
+            rampasMemoria.splice(index, 1);
+            rampasMemoria.forEach((r, idx) => {
+                r.paso = idx + 1;
+            });
+            actualizarGraficaObjetivo();
+            actualizarTablaUI();
+        }
+
+        function alternarModoTemporizador() {
+            const modo = document.getElementById('modoTemporizador').value;
+            const container = document.getElementById('inputsTemporizador');
+            if (modo === 'diferido') {
+                container.style.display = 'flex';
+                const ahora = new Date();
+                let tzoffset = ahora.getTimezoneOffset() * 60000;
+                let localISOTime = (new Date(ahora.getTime() - tzoffset)).toISOString().slice(0, 16);
+                document.getElementById('progHoraInicio').value = localISOTime;
+                calcularTiemposTemporizador('inicio');
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        function calcularTiemposTemporizador(cambioOrigen) {
+            let totalMinutos = rampasMemoria.reduce((acc, r) => acc + parseInt(r.duracion_minutos), 0);
+            const inputInicio = document.getElementById('progHoraInicio');
+            const inputFin = document.getElementById('progHoraFin');
+            const infoMsg = document.getElementById('infoTemporizador');
+
+            if (totalMinutos <= 0) {
+                if (infoMsg) {
+                    infoMsg.innerHTML = "⚠️ Añade al menos un paso a la gráfica para calcular los tiempos.";
+                    infoMsg.style.display = 'block';
+                }
+                return;
+            }
+
+            // Auto-seleccionar modo diferido y mostrar controles al interactuar
+            const modoSelect = document.getElementById('modoTemporizador');
+            if (modoSelect && modoSelect.value !== 'diferido' && (cambioOrigen === 'inicio' || cambioOrigen === 'fin')) {
+                modoSelect.value = 'diferido';
+                document.getElementById('inputsTemporizador').style.display = 'flex';
+            }
+
+            if (cambioOrigen === 'inicio' && inputInicio && inputInicio.value) {
+                let fechaInicio = new Date(inputInicio.value);
+                let fechaFin = new Date(fechaInicio.getTime() + totalMinutos * 60 * 1000);
+                
+                let tzoffset = fechaFin.getTimezoneOffset() * 60000;
+                let localISOTime = (new Date(fechaFin.getTime() - tzoffset)).toISOString().slice(0, 16);
+                inputFin.value = localISOTime;
+            } else if (cambioOrigen === 'fin' && inputFin && inputFin.value) {
+                let fechaFin = new Date(inputFin.value);
+                let fechaInicio = new Date(fechaFin.getTime() - totalMinutos * 60 * 1000);
+                
+                let tzoffset = fechaInicio.getTimezoneOffset() * 60000;
+                let localISOTime = (new Date(fechaInicio.getTime() - tzoffset)).toISOString().slice(0, 16);
+                inputInicio.value = localISOTime;
+            }
+
+            if (inputInicio && inputFin && inputInicio.value && inputFin.value && infoMsg) {
+                const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+                let iniFmt = new Date(inputInicio.value).toLocaleDateString('es-ES', opciones);
+                let finFmt = new Date(inputFin.value).toLocaleDateString('es-ES', opciones);
+                infoMsg.innerHTML = `🏁 <b>Inicio automático:</b> ${iniFmt}<br>🛑 <b>Apagado automático (Fin):</b> ${finFmt}<br>⏱️ <b>Duración total:</b> ${totalMinutos} minutos`;
+                infoMsg.style.display = 'block';
+            }
+        }
+
+        function actualizarGraficaObjetivo() {
+            const nuevasCoordenadas = obtenerCoordenadasRampa(rampasMemoria);
+            chart.data.datasets[0].data = nuevasCoordenadas;
+            chart.update();
+        }
+
+        async function enviarAlHorno() {
+            const btn = document.getElementById('btnProgramar');
+            const nombreCurva = document.getElementById('nombreCurva').value.trim();
+            if (nombreCurva === "") {
+                alert("❌ Por favor, escribe un nombre para tu curva.");
+                return;
+            }
+
+            let horaInicioToSend = null;
+            if (document.getElementById('modoTemporizador').value === 'diferido') {
+                const val = document.getElementById('progHoraInicio').value;
+                if (!val) {
+                    alert("❌ Por favor, selecciona una hora de inicio para la programación diferida.");
+                    return;
+                }
+                horaInicioToSend = new Date(val).toISOString();
+            }
+
+            btn.disabled = true;
+            btn.innerText = "⏳ Enviando...";
+
+            try {
+                const rampasFormateadas = rampasMemoria.map(r => ({
+                    paso: r.paso,
+                    duracion_seg: r.duracion_minutos * 60,
+                    temp_final: r.temp_destino,
+                    estado_horno: r.estado_horno !== undefined ? r.estado_horno : 1,
+                    limite_ssr: r.limite_ssr !== undefined ? r.limite_ssr : 100
+                }));
+
+                const respuesta = await fetch('/api/v1/mqtt/programar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        usuario_id: usuarioId,
+                        dispositivo_id: dispositivoId,
+                        nombre_curva: nombreCurva,
+                        rampas: rampasFormateadas,
+                        hora_inicio: horaInicioToSend
+                    })
+                });
+
+                const datos = await respuesta.json();
+                if (datos.exito) {
+                    alert('🎉 ' + datos.mensaje);
+                    document.getElementById('guardarNombre').value = nombreCurva;
+                    
+                    // --- CAPTURAR HORA PROGRAMADA PARA EL CONTADOR EN VIVO ---
+                    if (horaInicioToSend) {
+                        horaInicioProgramadaUI = new Date(horaInicioToSend);
+                    } else {
+                        horaInicioProgramadaUI = null;
+                    }
+                    
+                    // --- RESETEAR EL TEMPORIZADOR AL CARGAR ---
+                    document.getElementById('modoTemporizador').value = 'inmediato';
+                    alternarModoTemporizador();
+                    
+                    // --- GUARDADO AUTOMÁTICO EN LOCALSTORAGE ---
+                    const keyPlantilla = 'user_' + nombreCurva.toLowerCase().replace(/[^a-z0-9]/g, '_');
+                    
+                    plantillasUsuario[keyPlantilla] = {
+                        nombre: `💾 ${nombreCurva} (Guardada)`,
+                        rampas: JSON.parse(JSON.stringify(rampasMemoria))
+                    };
+                    
+                    // Guardar permanentemente en localStorage
+                    localStorage.setItem('plantillas_usuario', JSON.stringify(plantillasUsuario));
+                    
+                    // Actualizar el Selector UI de Plantillas de forma reactiva
+                    recargarSelectPlantillas(keyPlantilla);
+                } else {
+                    alert('❌ Error: ' + datos.mensaje);
+                }
+            } catch (err) {
+                alert('❌ Error de comunicación.');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "📤 Cargar Curva de Quema (Neon + MQTT)";
+            }
+        }
+
+        // Función auxiliar para repoblar el optgroup de plantillas del usuario de forma limpia
+        function recargarSelectPlantillas(seleccionarKey = "") {
+            const optgroup = document.getElementById('grupoPlantillasUsuario');
+            optgroup.innerHTML = ''; // Limpiar anteriores
+            
+            Object.keys(plantillasUsuario).forEach(key => {
+                const p = plantillasUsuario[key];
+                const option = document.createElement('option');
+                option.value = key;
+                option.innerText = p.nombre.replace(' (Guardada)', '');
+                optgroup.appendChild(option);
+            });
+            
+            if (seleccionarKey) {
+                document.getElementById('selectPresets').value = seleccionarKey;
+                document.getElementById('accionesPlantillaUsuario').style.display = 'flex';
+            }
+        }
+
+        // Enviar comandos de inicio y parada
+        async function enviarComando(accion) {
+            if (accion === 'INICIAR_QUEMA') {
+                horaInicioQuema = new Date();
+                document.getElementById('guardarInicio').value = obtenerFechaFormateada(horaInicioQuema);
+                temperaturaMaximaRegistrada = 20.0;
+                horaInicioProgramadaUI = null;
+            } else if (accion === 'APAGAR_EMERGENCIA') {
+                document.getElementById('guardarFin').value = obtenerFechaFormateada(new Date());
+                horaInicioProgramadaUI = null;
+            }
+
+            try {
+                const respuesta = await fetch('/api/v1/mqtt/comando', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        usuario_id: usuarioId,
+                        dispositivo_id: dispositivoId,
+                        accion: accion
+                    })
+                });
+                
+                const datos = await respuesta.json();
+                if (datos.exito) {
+                    alert(`📬 Comando "${accion}" enviado exitosamente al Horno.`);
+                } else {
+                    alert('❌ Error al enviar comando: ' + datos.mensaje);
+                }
+            } catch (err) {
+                alert('❌ Error al comunicarse con el servidor.');
+            }
+        }
+
+        // Guardar registro de la quema en la tabla quemas_guardadas de Neon.com
+        async function guardarRegistroQuema() {
+            const nombre = document.getElementById('guardarNombre').value;
+            const notas = document.getElementById('guardarNotas').value;
+            const inicio = document.getElementById('guardarInicio').value;
+            const fin = document.getElementById('guardarFin').value;
+
+            if (!nombre || !inicio || !fin) {
+                alert('❌ Por favor, ingresa el nombre de la quema y las horas de inicio y fin.');
+                return;
+            }
+
+            try {
+                const respuesta = await fetch('/api/v1/mqtt/guardar-historial', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nombre_curva: nombre,
+                        dispositivo_id: dispositivoId,
+                        fecha_inicio: new Date(inicio).toISOString(),
+                        fecha_fin: new Date(fin).toISOString(),
+                        temperatura_maxima: temperaturaMaximaRegistrada,
+                        notes: notas
+                    })
+                });
+
+                const datos = await respuesta.json();
+                if (datos.exito) {
+                    alert('💾 ¡Historial de quema guardado exitosamente en Neon.com!');
+                    listarQuemasGuardadas(); // Actualizar la lista en pantalla
+                    
+                    // Limpiar notas
+                    document.getElementById('guardarNotas').value = '';
+                } else {
+                    alert('❌ Error al guardar historial: ' + datos.mensaje);
+                }
+            } catch (err) {
+                alert('❌ Error de red al intentar guardar.');
+            }
+        }
+
+        // Listar todas las quemas guardadas desde Neon.com
+        async function listarQuemasGuardadas() {
+            try {
+                const respuesta = await fetch('/api/v1/mqtt/quemas-guardadas');
+                const datos = await respuesta.json();
+
+                if (datos.exito) {
+                    const tbody = document.getElementById('tablaQuemasGuardadas').querySelector('tbody');
+                    tbody.innerHTML = '';
+
+                    if (datos.datos.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--texto-mutado);">No hay quemas guardadas en Neon.com.</td></tr>';
+                        return;
+                    }
+
+                    datos.datos.forEach(q => {
+                        const fechaInicioObj = new Date(q.fecha_inicio);
+                        const fechaFinObj = new Date(q.fecha_fin);
+                        
+                        // Formatear el Día y Fecha en español
+                        const opcionesDia = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                        const diaFecha = fechaInicioObj.toLocaleDateString('es-ES', opcionesDia);
+                        
+                        // Formatear las horas
+                        const horaInicio = fechaInicioObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                        const horaFin = fechaFinObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+                        const fila = document.createElement('tr');
+                        fila.innerHTML = `
+                            <td style="font-weight: 600; color: var(--secundario-brillo)">${q.nombre_curva}</td>
+                            <td style="text-transform: capitalize;">${diaFecha}</td>
+                            <td>${horaInicio} ──> ${horaFin}</td>
+                            <td style="font-weight: 600; color: var(--primario-brillo);">${parseFloat(q.temperatura_maxima).toFixed(0)}°C</td>
+                            <td style="color: var(--texto-mutado); font-style: italic;">${q.notes || 'Sin notas'}</td>
+                        `;
+                        tbody.appendChild(fila);
+                    });
+                }
+            } catch (err) {
+                console.error('Error al listar quemas guardadas:', err);
+            }
+        }
+
+        function desconectarAplicacion() {
+            monitoreoActivo = false;
+            clearInterval(intervaloTelemetria);
+
+            const led = document.getElementById('indicadorLed');
+            const txt = document.getElementById('textoEstado');
+            const notif = document.getElementById('notificacionIntervalo');
+
+            led.className = "punto-latente offline";
+            txt.innerText = "APLICACIÓN DESCONECTADA";
+            txt.style.color = "#ef4444";
+            notif.innerText = "🔌 Monitoreo apagado manualmente. Aplicación desconectada.";
+            notif.style.color = "#ef4444";
+
+            document.getElementById('btnDesconectar').disabled = true;
+            document.getElementById('btnDesconectar').innerText = "🔌 Desconectado";
+        }
+
+        function reconfigurarIntervaloMonitoreo(nuevoIntervaloMs, textoMensaje, colorTexto) {
+            if (intervaloTiempoActual === nuevoIntervaloMs) return;
+            intervaloTiempoActual = nuevoIntervaloMs;
+            clearInterval(intervaloTelemetria);
+
+            if (monitoreoActivo) {
+                intervaloTelemetria = setInterval(consultarTelemetriaEnTiempoReal, nuevoIntervaloMs);
+                const notif = document.getElementById('notificacionIntervalo');
+                notif.innerText = textoMensaje;
+                notif.style.color = colorTexto;
+            }
+        }
+
+        // Alternar Visibilidad de Datasets en la Gráfica
+        function alternarVisibilidadDataset(datasetIndex) {
+            const visible = chart.isDatasetVisible(datasetIndex);
+            chart.setDatasetVisibility(datasetIndex, !visible);
+            chart.update();
+
+            const btnId = datasetIndex === 0 ? 'btnToggleProgramado' : 'btnToggleReal';
+            const btn = document.getElementById(btnId);
+            const prefijo = datasetIndex === 0 ? 'Curva Programada' : 'Telemetría en Vivo';
+            
+            if (visible) {
+                btn.className = 'toggle-pill';
+                btn.innerHTML = `❌ ${prefijo}: Oculto`;
+            } else {
+                btn.className = datasetIndex === 0 ? 'toggle-pill activo-programado' : 'toggle-pill activo-real';
+                btn.innerHTML = `<span>${datasetIndex === 0 ? '🔥' : '⚡'}</span> ${prefijo}: Visible`;
+            }
+        }
+
+        // Cambiar la resolución temporal del eje X (Estilo TradingView)
+        function cambiarResolucionX(modo) {
+            resolucionActivaX = modo;
+            
+            // Actualizar clases activas en los pills visuales
+            const idsPills = ['res-auto', 'res-10m', 'res-30m', 'res-1h'];
+            idsPills.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    if (id === `res-${modo}`) {
+                        el.classList.add('activo');
+                    } else {
+                        el.classList.remove('activo');
+                    }
+                }
+            });
+
+            // Ajustar el stepSize y título del eje X según el modo elegido
+            if (modo === 'auto') {
+                chart.options.scales.x.ticks.stepSize = undefined;
+                chart.options.scales.x.title.text = 'Tiempo Acumulado (Minutos)';
+            } else if (modo === '10m') {
+                chart.options.scales.x.ticks.stepSize = 10;
+                chart.options.scales.x.title.text = 'Tiempo Acumulado (Intervalos 10m)';
+            } else if (modo === '30m') {
+                chart.options.scales.x.ticks.stepSize = 30;
+                chart.options.scales.x.title.text = 'Tiempo Acumulado (Intervalos 30m)';
+            } else if (modo === '1h') {
+                chart.options.scales.x.ticks.stepSize = 60;
+                chart.options.scales.x.title.text = 'Tiempo Acumulado (Horas)';
+            }
+
+            // Actualizar la gráfica para aplicar los cambios en caliente
+            chart.update();
+        }
+
+        // Cargar Curvas Profesionales desde Presets
+        function cargarPresetQuema() {
+            const preset = document.getElementById('selectPresets').value;
+            if (!preset) return;
+
+            let nuevasRampas = [];
+            let nombre = "";
+
+            // Mostrar u ocultar controles contextuales si es una plantilla de usuario
+            const divAcciones = document.getElementById('accionesPlantillaUsuario');
+            if (preset.startsWith('user_')) {
+                divAcciones.style.display = 'flex';
+                // Es una plantilla personalizada guardada por el usuario
+                const plantilla = plantillasUsuario[preset];
+                if (plantilla) {
+                    // Copia profunda para no editar el original por accidente en memoria sin guardar
+                    nuevasRampas = JSON.parse(JSON.stringify(plantilla.rampas));
+                    nombre = plantilla.nombre.replace('💾 ', '').replace(' (Guardada)', '');
+                }
+            } else {
+                divAcciones.style.display = 'none';
+                if (preset === 'bizcocho') {
+                    nombre = "Bizcocho Cerámico Estándar Lento";
+                    nuevasRampas = [
+                        { paso: 1, duracion_minutos: 60, temp_destino: 150, estado_horno: 1 },
+                        { paso: 2, duracion_minutos: 120, temp_destino: 573, estado_horno: 1 },
+                        { paso: 3, duracion_minutos: 180, temp_destino: 960, estado_horno: 1 },
+                        { paso: 4, duracion_minutos: 20, temp_destino: 960, estado_horno: 1 }
+                    ];
+                } else if (preset === 'esmalte_baja') {
+                    nombre = "Esmalte de Baja Temperatura Cone 06";
+                    nuevasRampas = [
+                        { paso: 1, duracion_minutos: 90, temp_destino: 600, estado_horno: 1 },
+                        { paso: 2, duracion_minutos: 150, temp_destino: 1020, estado_horno: 1 },
+                        { paso: 3, duracion_minutos: 30, temp_destino: 1020, estado_horno: 1 }
+                    ];
+                }
+            }
+
+            if (nuevasRampas.length > 0) {
+                rampasMemoria = nuevasRampas;
+                document.getElementById('nombreCurva').value = nombre;
+                document.getElementById('guardarNombre').value = nombre;
+                actualizarGraficaObjetivo();
+                actualizarTablaUI();
+            }
+        }
+
+        // Editar el nombre de una plantilla guardada
+        function editarNombrePlantilla() {
+            const select = document.getElementById('selectPresets');
+            const key = select.value;
+            if (!key.startsWith('user_')) return;
+
+            const plantilla = plantillasUsuario[key];
+            if (!plantilla) return;
+
+            const viejoNombreLimpie = plantilla.nombre.replace('💾 ', '').replace(' (Guardada)', '');
+            const nuevoNombre = prompt("✏️ Ingresa el nuevo nombre para tu plantilla:", viejoNombreLimpie);
+            
+            if (nuevoNombre && nuevoNombre.trim() !== "") {
+                const nombreLimpio = nuevoNombre.trim();
+                const nuevaKey = 'user_' + nombreLimpio.toLowerCase().replace(/[^a-z0-9]/g, '_');
+                
+                // Transferir la información al nuevo identificador en memoria
+                plantillasUsuario[nuevaKey] = {
+                    nombre: `💾 ${nombreLimpio} (Guardada)`,
+                    rampas: JSON.parse(JSON.stringify(plantilla.rampas))
+                };
+                
+                // Borrar la clave antigua si cambió
+                if (nuevaKey !== key) {
+                    delete plantillasUsuario[key];
+                }
+
+                // Guardar de inmediato en localStorage
+                localStorage.setItem('plantillas_usuario', JSON.stringify(plantillasUsuario));
+
+                // Recargar reactivamente el select del DOM y seleccionar la nueva plantilla
+                recargarSelectPlantillas(nuevaKey);
+                
+                document.getElementById('nombreCurva').value = nombreLimpio;
+                document.getElementById('guardarNombre').value = nombreLimpio;
+                
+                alert("✨ ¡Nombre de plantilla editado y actualizado con éxito!");
+            }
+        }
+
+        // Guardar cambios aplicados sobre los pasos de la plantilla seleccionada
+        function guardarCambiosPlantilla() {
+            const select = document.getElementById('selectPresets');
+            const key = select.value;
+            if (!key.startsWith('user_')) return;
+
+            const plantilla = plantillasUsuario[key];
+            if (!plantilla) return;
+
+            // Guardar el estado actual de los pasos de la memoria
+            plantilla.rampas = JSON.parse(JSON.stringify(rampasMemoria));
+            
+            // Sincronizar el nombre del input principal
+            const nombreActual = document.getElementById('nombreCurva').value.trim();
+            if (nombreActual !== "") {
+                plantilla.nombre = `💾 ${nombreActual} (Guardada)`;
+            }
+
+            // Sincronizar en localStorage
+            localStorage.setItem('plantillas_usuario', JSON.stringify(plantillasUsuario));
+            
+            // Recargar UI
+            recargarSelectPlantillas(key);
+
+            alert("💾 ¡Cambios en los pasos de la plantilla guardados con éxito en memoria y LocalStorage!");
+        }
+
+        // Eliminar la plantilla seleccionada
+        function eliminarPlantillaUsuario() {
+            const select = document.getElementById('selectPresets');
+            const key = select.value;
+            if (!key.startsWith('user_')) return;
+
+            const plantilla = plantillasUsuario[key];
+            if (!plantilla) return;
+
+            const nombreEx = plantilla.nombre.replace('💾 ', '').replace(' (Guardada)', '');
+            const confirmar = confirm(`⚠️ ¿Estás seguro de que deseas eliminar permanentemente la plantilla "${nombreEx}"?`);
+            
+            if (confirmar) {
+                // Borrar del objeto de memoria
+                delete plantillasUsuario[key];
+                
+                // Actualizar de inmediato en localStorage
+                localStorage.setItem('plantillas_usuario', JSON.stringify(plantillasUsuario));
+
+                // Recargar reactivamente el select del DOM (limpiando la borrada)
+                recargarSelectPlantillas("");
+
+                // Resetear UI visual
+                select.value = "";
+                document.getElementById('accionesPlantillaUsuario').style.display = 'none';
+                
+                // Limpiar inputs y gráfica
+                document.getElementById('nombreCurva').value = "Bizcocho Manual Rápido";
+                document.getElementById('guardarNombre').value = "Bizcocho Manual Rápido";
+                
+                alert("🗑️ Plantilla eliminada exitosamente.");
+            }
+        }
+
+        // Calcular y actualizar el widget de progreso
+        function actualizarProgresoQuema(minutosTranscurridos, tempReal) {
+            let tiempoAcumulado = 0;
+            let pasoActualIdx = -1;
+            let tempObjetivoActual = 20;
+            
+            for (let i = 0; i < rampasMemoria.length; i++) {
+                const duracion = parseFloat(rampasMemoria[i].duracion_minutos);
+                const inicioPasoTiempo = tiempoAcumulado;
+                tiempoAcumulado += duracion;
+                
+                if (minutosTranscurridos <= tiempoAcumulado && pasoActualIdx === -1) {
+                    pasoActualIdx = i;
+                    const tempInicio = i === 0 ? 20 : parseFloat(rampasMemoria[i-1].temp_destino);
+                    const tempFin = parseFloat(rampasMemoria[i].temp_destino);
+                    const fraccion = (minutosTranscurridos - inicioPasoTiempo) / duracion;
+                    tempObjetivoActual = tempInicio + (tempFin - tempInicio) * fraccion;
+                }
+            }
+
+            const totalTiempoRampa = tiempoAcumulado;
+            const pctProgreso = totalTiempoRampa > 0 ? Math.min((minutosTranscurridos / totalTiempoRampa) * 100, 100) : 0;
+            
+            document.getElementById('progresoBarraFill').style.width = pctProgreso + '%';
+            document.getElementById('progresoTextoTiempo').innerText = `Tiempo transcurrido: ${minutosTranscurridos.toFixed(1)} min / ${totalTiempoRampa.toFixed(0)} min`;
+            
+            if (pasoActualIdx !== -1) {
+                document.getElementById('progresoTextoPaso').innerText = `Paso ${pasoActualIdx + 1} de ${rampasMemoria.length} (${pctProgreso.toFixed(0)}%)`;
+                document.getElementById('progresoTextoObjetivo').innerText = `Objetivo Paso: ${tempObjetivoActual.toFixed(0)}°C (Real: ${tempReal.toFixed(0)}°C)`;
+            } else if (totalTiempoRampa > 0 && minutosTranscurridos > totalTiempoRampa) {
+                document.getElementById('progresoTextoPaso').innerText = `Rampa Completada (100%)`;
+                document.getElementById('progresoTextoObjetivo').innerText = `Fase de Enfriamiento Activa`;
+            } else {
+                document.getElementById('progresoTextoPaso').innerText = `Listo para Iniciar`;
+                document.getElementById('progresoTextoObjetivo').innerText = `Objetivo: --`;
+            }
+        }
+
+        // Consultar telemetría
+        async function consultarTelemetriaEnTiempoReal() {
+            if (!monitoreoActivo) return;
+
+            try {
+                const respuesta = await fetch(`/api/v1/mqtt/telemetria/${dispositivoId}`);
+                const datos = await respuesta.json();
+
+                if (datos.exito && datos.datos.length > 0) {
+                    const registros = datos.datos;
+                    const registroReciente = registros[registros.length - 1];
+                    const temp = parseFloat(registroReciente.temperatura);
+                    const obj = parseFloat(registroReciente.temperatura_objetivo);
+                    const resistencia = parseFloat(registroReciente.estado_resistencia);
+
+                    // A. Registrar temperatura máxima para el guardado
+                    if (temp > temperaturaMaximaRegistrada) {
+                        temperaturaMaximaRegistrada = temp;
+                    }
+
+                    // B. Actualizar Termómetro de Seguridad
+                    document.getElementById('termometroValor').innerText = temp.toFixed(0);
+                    const termometroPorcentaje = Math.min((temp / 1300) * 100, 100);
+                    document.getElementById('termometroMercurio').style.height = termometroPorcentaje + '%';
+                    
+                    const alertaT = document.getElementById('termometroAlerta');
+                    if (temp < 100.0) {
+                        alertaT.innerText = "🌡️ Temperatura Ambiente Segura";
+                        alertaT.style.color = "#10b981";
+                    } else if (temp < 500.0) {
+                        alertaT.innerText = "⚠️ Horno Caliente - ¡Evitar contacto!";
+                        alertaT.style.color = "#fbbf24";
+                    } else if (temp < 1000.0) {
+                        alertaT.innerText = "🔥 Alta Temperatura - Firing Activo";
+                        alertaT.style.color = "#ff7b00";
+                    } else {
+                        alertaT.innerText = "🚨 Calor Extremo - Mantener Distancia";
+                        alertaT.style.color = "#ef4444";
+                    }
+
+                    // C. Actualizar Widget de Progreso de Rampa y LEDs si no hay temporizador activo
+                    if (!horaInicioProgramadaUI) {
+                        const minutosTranscurridos = (registros.length * 3) / 60;
+                        actualizarProgresoQuema(minutosTranscurridos, temp);
+
+                        const led = document.getElementById('indicadorLed');
+                        const txt = document.getElementById('textoEstado');
+
+                        // Determinar estado de la quema y refresco
+                        if (resistencia > 5.0) {
+                            led.className = "punto-latente calentando";
+                            txt.innerText = `CALENTANDO - Temp: ${temp}°C`;
+                            txt.style.color = "#ff7b00";
+                            reconfigurarIntervaloMonitoreo(3000, "🔥 Quema Activa. Refresco de alta velocidad: cada 3 segundos.", "#ff7b00");
+                        } else {
+                            if (temp > 100.0) {
+                                led.className = "punto-latente enfriando";
+                                txt.innerText = `ENFRIANDO (APAGADO) - Temp: ${temp}°C`;
+                                txt.style.color = "#00f3ff";
+                                reconfigurarIntervaloMonitoreo(60000, "❄️ Fase de Enfriamiento Activa. Refresco inteligente: cada 1 minuto.", "#00f3ff");
+                            } else {
+                                led.className = "punto-latente";
+                                led.style.background = "#10b981";
+                                led.style.boxShadow = "0 0 10px #10b981";
+                                txt.innerText = `HORNO INACTIVO - Temp: ${temp}°C`;
+                                txt.style.color = "#10b981";
+                                reconfigurarIntervaloMonitoreo(3000, "🟢 Sistema Listo. Actualización estándar cada 3 segundos.", "#10b981");
+                            }
+                        }
+                    }
+
+                    // D. Graficar la telemetría acumulada completa desde el inicio
+                    const datosRealesGrafica = registros.map((r, index) => ({
+                        x: (index * 3) / 60, // Dividido por 60 para mostrar el eje x en MINUTOS en vez de segundos
+                        y: parseFloat(r.temperatura)
+                    }));
+
+                    chart.data.datasets[1].data = datosRealesGrafica;
+                    chart.update();
+                }
+            } catch (err) {
+                console.warn('Error al obtener telemetría:', err);
+            }
+        }
+
+        let horaInicioProgramadaUI = null;
+        let intervaloCuentaRegresiva = null;
+
+        function iniciarCuentaRegresivaUI() {
+            if (intervaloCuentaRegresiva) clearInterval(intervaloCuentaRegresiva);
+            
+            intervaloCuentaRegresiva = setInterval(() => {
+                if (!horaInicioProgramadaUI) return;
+
+                const ahora = new Date();
+                const diff = horaInicioProgramadaUI.getTime() - ahora.getTime();
+
+                if (diff > 0) {
+                    const minutos = Math.floor(diff / 60000);
+                    const segundos = Math.floor((diff % 60000) / 1000);
+
+                    // Forzar indicadores de estado a espera diferida (Amarillo parpadeante)
+                    const led = document.getElementById('indicadorLed');
+                    const txt = document.getElementById('textoEstado');
+                    if (led && txt) {
+                        led.className = "punto-latente";
+                        led.style.background = "#fbbf24";
+                        led.style.boxShadow = "0 0 15px #fbbf24";
+                        led.style.animation = "latido 1.5s infinite ease-in-out";
+                        txt.innerText = `⏱️ ESPERA DIFERIDA - Programado`;
+                        txt.style.color = "#fbbf24";
+                    }
+
+                    // Actualizar el widget de progreso con la cuenta regresiva en vivo
+                    const txtPaso = document.getElementById('progresoTextoPaso');
+                    const txtTiempo = document.getElementById('progresoTextoTiempo');
+                    const txtObj = document.getElementById('progresoTextoObjetivo');
+                    const barra = document.getElementById('progresoBarraFill');
+
+                    if (txtPaso) txtPaso.innerHTML = `⏱️ Inicia en: <span style="font-weight: 800; color: #fbbf24; font-family: monospace; font-size: 0.9rem;">${minutos}m ${segundos}s</span>`;
+                    if (txtTiempo) txtTiempo.innerText = `Inicio: ${horaInicioProgramadaUI.toLocaleTimeString()}`;
+                    
+                    let totalMinutos = rampasMemoria.reduce((acc, r) => acc + parseInt(r.duracion_minutos), 0);
+                    let horaFin = new Date(horaInicioProgramadaUI.getTime() + totalMinutos * 60000);
+                    if (txtObj) txtObj.innerText = `Fin y Apagado: ${horaFin.toLocaleTimeString()}`;
+                    if (barra) barra.style.width = '0%';
+                } else {
+                    // Limpiar y restaurar
+                    horaInicioProgramadaUI = null;
+                    const led = document.getElementById('indicadorLed');
+                    if (led) {
+                        led.style.animation = ""; // Quitar animación manual
+                    }
+                }
+            }, 1000);
+        }
+
+        window.onload = () => {
+            inicializarGrafico();
+            actualizarTablaUI();
+            
+            // Cargar de forma reactiva las plantillas guardadas en localStorage al cargar la página
+            recargarSelectPlantillas("");
+
+            // Asignar fechas iniciales recomendadas
+            const ahora = new Date();
+            const haceUnaHora = new Date(ahora.getTime() - (60 * 60 * 1000));
+            document.getElementById('guardarInicio').value = obtenerFechaFormateada(haceUnaHora);
+            document.getElementById('guardarFin').value = obtenerFechaFormateada(ahora);
+
+            // Cargar historial de quemas desde Neon
+            listarQuemasGuardadas();
+            
+            iniciarCuentaRegresivaUI();
+            consultarTelemetriaEnTiempoReal();
+            intervaloTelemetria = setInterval(consultarTelemetriaEnTiempoReal, 3000);
+        };
+    </script>
+</body>
+</html>

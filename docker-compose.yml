@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # 1. Base de datos PostgreSQL + TimescaleDB (para desarrollo local)
+  # Nota: En producción o pruebas en la nube, apuntarás tu .env a tu instancia de Neon.com.
+  base_datos:
+    image: timescale/timescaledb:latest-pg15
+    container_name: hornos_db
+    restart: always
+    environment:
+      POSTGRES_DB: hornos_iot
+      POSTGRES_USER: admin_hornos
+      POSTGRES_PASSWORD: password_seguro_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - datos_db:/var/lib/postgresql/data
+      - ./esquema.sql:/docker-entrypoint-initdb.d/esquema.sql
+    networks:
+      - red_iot
+
+  # 2. Broker MQTT Mosquitto con Autenticación Dinámica
+  broker_mqtt:
+    image: iegomez/mosquitto-go-auth:latest
+    container_name: hornos_broker
+    restart: always
+    ports:
+      - "1883:1883" # Puerto MQTT estándar
+    volumes:
+      - ./mosquitto/config/mosquitto.conf:/etc/mosquitto/mosquitto.conf:ro
+      - datos_broker:/mosquitto/data
+    depends_on:
+      - backend
+    networks:
+      - red_iot
+
+  # 3. Servidor Back-End Express + TypeScript
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: hornos_backend
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend/public:/app/public
+    env_file:
+      - ./backend/.env
+    environment:
+      - MQTT_BROKER_URL=mqtt://broker_mqtt:1883
+    depends_on:
+      - base_datos
+    networks:
+      - red_iot
+
+volumes:
+  datos_db:
+  datos_broker:
+
+networks:
+  red_iot:
+    driver: bridge
