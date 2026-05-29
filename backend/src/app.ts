@@ -57,7 +57,10 @@ app.get('/api/salud', (req, res) => {
 async function sembrarDatosPrueba() {
   console.log('🌱 Iniciando verificación y auto-siembra de cuentas de prueba...');
   try {
-    const contrasenaComunHash = await bcrypt.hash('password123', 10);
+    const hashAlberto = await bcrypt.hash('alberto123', 10);
+    const hashSebastian = await bcrypt.hash('sebastian123', 10);
+    const hashAbel = await bcrypt.hash('abel123', 10);
+    
     const tokenSebastianHash = await bcrypt.hash('token_sebastian_123', 10);
     const tokenAbelHash = await bcrypt.hash('token_abel_123', 10);
 
@@ -67,14 +70,14 @@ async function sembrarDatosPrueba() {
       VALUES ('5a8288b2-132d-45db-9964-b040bf5ffbb7', 'alberto@ejemplo.com', $1, 'Alberto Galíndez')
       ON CONFLICT (correo) DO UPDATE SET contrasena_hash = EXCLUDED.contrasena_hash
     `;
-    await pool.query(sqlUser1, [contrasenaComunHash]);
+    await pool.query(sqlUser1, [hashAlberto]);
 
     const sqlDevice1 = `
       INSERT INTO dispositivos (id, nombre, usuario_id, mqtt_usuario, mqtt_contrasena_hash, estado)
       VALUES ('b4578e9b-0081-42ab-ba41-d68a994abfe2', 'Horno Principal de Alberto', '5a8288b2-132d-45db-9964-b040bf5ffbb7', 'horno_esp32_1', $1, 'desconectado')
       ON CONFLICT (mqtt_usuario) DO NOTHING
     `;
-    await pool.query(sqlDevice1, [contrasenaComunHash]);
+    await pool.query(sqlDevice1, [hashAlberto]);
 
     // 2. Sembrar Sebastian Ettese
     const sqlUser2 = `
@@ -82,7 +85,7 @@ async function sembrarDatosPrueba() {
       VALUES ('f398c933-dc7c-4f5d-826d-a5a417438bfb', 'sebastian@ejemplo.com', $1, 'Sebastian Ettese')
       ON CONFLICT (correo) DO UPDATE SET contrasena_hash = EXCLUDED.contrasena_hash
     `;
-    await pool.query(sqlUser2, [contrasenaComunHash]);
+    await pool.query(sqlUser2, [hashSebastian]);
 
     const sqlDevice2 = `
       INSERT INTO dispositivos (id, nombre, usuario_id, mqtt_usuario, mqtt_contrasena_hash, estado)
@@ -97,7 +100,7 @@ async function sembrarDatosPrueba() {
       VALUES ('24527d36-fafa-4366-80ea-3e3a90a454b2', 'abel@ejemplo.com', $1, 'Abel Inocente')
       ON CONFLICT (correo) DO UPDATE SET contrasena_hash = EXCLUDED.contrasena_hash
     `;
-    await pool.query(sqlUser3, [contrasenaComunHash]);
+    await pool.query(sqlUser3, [hashAbel]);
 
     const sqlDevice3 = `
       INSERT INTO dispositivos (id, nombre, usuario_id, mqtt_usuario, mqtt_contrasena_hash, estado)
