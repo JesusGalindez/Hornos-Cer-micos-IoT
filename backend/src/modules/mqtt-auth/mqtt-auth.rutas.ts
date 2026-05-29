@@ -198,7 +198,7 @@ router.post('/programar', async (req: Request, res: Response) => {
   } catch (dbError: any) {
     console.warn(`⚠️ Advertencia de base de datos (Modo offline activo): ${dbError.message}`);
   }
-
+  try {
     // C. Publicar en Mosquitto MQTT en el tópico de comandos
     const opcionesConexion: mqtt.IClientOptions = {
       username: USUARIO_SISTEMA,
