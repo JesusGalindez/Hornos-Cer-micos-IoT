@@ -52,6 +52,7 @@ const cliente = mqtt.connect(BROKER_URL, {
   password: MQTT_CONTRASENA,
   clientId: `esp32_horno_porcelana_${DISPOSITIVO_ID.substring(0, 8)}`,
   clean: true,
+  rejectUnauthorized: false, // Permitir conexiones seguras SSL/TLS en brokers en la nube
   will: {
     topic: topicoEstado,
     payload: Buffer.from('desconectado'),
