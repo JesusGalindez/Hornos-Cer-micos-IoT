@@ -199,37 +199,49 @@ router.post('/programar', async (req: Request, res: Response) => {
     console.warn(`⚠️ Advertencia de base de datos (Modo offline activo): ${dbError.message}`);
   }
   try {
-    // C. Publicar en Mosquitto MQTT en el tópico de comandos
     const opcionesConexion: mqtt.IClientOptions = {
       username: USUARIO_SISTEMA,
       password: CONTRASENA_SISTEMA,
       clientId: `backend_publicador_${Math.random().toString(16).substr(2, 8)}`,
+      connectTimeout: 5000
     };
 
-    // Configurar TLS para HiveMQ Cloud
     if (BROKER_URL.startsWith('mqtts://')) {
       opcionesConexion.rejectUnauthorized = false;
     }
 
-    const clienteMqtt = mqtt.connect(BROKER_URL, opcionesConexion);
+    // Envolver en promesa para forzar la sincronía del envío en la nube
+    await new Promise<void>((resolve, reject) => {
+      const clienteMqtt = mqtt.connect(BROKER_URL, opcionesConexion);
 
-    clienteMqtt.on('connect', () => {
-      const topicoComandos = `usuarios/${usuario_id}/hornos/${dispositivo_id}/comandos`;
-      const payload = {
-        accion: 'PROGRAMAR_CURVA',
-        nombre_curva,
-        rampas,
-        hora_inicio: req.body.hora_inicio || null
-      };
+      const timeout = setTimeout(() => {
+        clienteMqtt.end(true);
+        reject(new Error('Tiempo de espera agotado al conectar al Broker MQTT para programar curva'));
+      }, 5000);
 
-      clienteMqtt.publish(topicoComandos, JSON.stringify(payload), { qos: 1 }, () => {
-        console.log(`📤 Backend: Nueva curva "${nombre_curva}" (Inicio: ${req.body.hora_inicio || 'Inmediato'}) enviada por MQTT al horno "${dispositivo_id}".`);
-        clienteMqtt.end();
+      clienteMqtt.on('connect', () => {
+        clearTimeout(timeout);
+        const topicoComandos = `usuarios/${usuario_id}/hornos/${dispositivo_id}/comandos`;
+        const payload = {
+          accion: 'PROGRAMAR_CURVA',
+          nombre_curva,
+          rampas,
+          hora_inicio: req.body.hora_inicio || null
+        };
+
+        clienteMqtt.publish(topicoComandos, JSON.stringify(payload), { qos: 1 }, () => {
+          console.log(`📤 Backend: Nueva curva "${nombre_curva}" (Inicio: ${req.body.hora_inicio || 'Inmediato'}) enviada por MQTT al horno "${dispositivo_id}".`);
+          clienteMqtt.end(true, () => {
+            resolve();
+          });
+        });
       });
-    });
 
-    clienteMqtt.on('error', (err) => {
-      console.error('❌ Error de conexión en el publicador MQTT:', err.message);
+      clienteMqtt.on('error', (err) => {
+        clearTimeout(timeout);
+        clienteMqtt.end(true);
+        reject(err);
+      });
     });
 
     const mensajeRespuesta = dbExito
@@ -244,7 +256,7 @@ router.post('/programar', async (req: Request, res: Response) => {
 
   } catch (error: any) {
     console.error('❌ Error al programar la curva en MQTT:', error.message);
-    return res.status(500).json({ exito: false, mensaje: 'Error interno al enviar comando por MQTT' });
+    return res.status(500).json({ exito: false, mensaje: `Error interno al enviar comando por MQTT: ${error.message}` });
   }
 });
 
@@ -264,27 +276,40 @@ router.post('/comando', async (req: Request, res: Response) => {
       username: USUARIO_SISTEMA,
       password: CONTRASENA_SISTEMA,
       clientId: `backend_comandante_${Math.random().toString(16).substr(2, 8)}`,
+      connectTimeout: 5000
     };
 
-    // Configurar TLS para HiveMQ Cloud
     if (BROKER_URL.startsWith('mqtts://')) {
       opcionesConexion.rejectUnauthorized = false;
     }
 
-    const clienteMqtt = mqtt.connect(BROKER_URL, opcionesConexion);
+    // Envolver en promesa para garantizar la entrega en producción
+    await new Promise<void>((resolve, reject) => {
+      const clienteMqtt = mqtt.connect(BROKER_URL, opcionesConexion);
 
-    clienteMqtt.on('connect', () => {
-      const topicoComandos = `usuarios/${usuario_id}/hornos/${dispositivo_id}/comandos`;
-      const payload = { accion };
+      const timeout = setTimeout(() => {
+        clienteMqtt.end(true);
+        reject(new Error('Tiempo de espera agotado al conectar al Broker MQTT'));
+      }, 5000);
 
-      clienteMqtt.publish(topicoComandos, JSON.stringify(payload), { qos: 1 }, () => {
-        console.log(`📤 Backend: Comando manual "${accion}" enviado por MQTT al horno "${dispositivo_id}".`);
-        clienteMqtt.end();
+      clienteMqtt.on('connect', () => {
+        clearTimeout(timeout);
+        const topicoComandos = `usuarios/${usuario_id}/hornos/${dispositivo_id}/comandos`;
+        const payload = { accion };
+
+        clienteMqtt.publish(topicoComandos, JSON.stringify(payload), { qos: 1 }, () => {
+          console.log(`📤 Backend: Comando manual "${accion}" enviado por MQTT al horno "${dispositivo_id}".`);
+          clienteMqtt.end(true, () => {
+            resolve();
+          });
+        });
       });
-    });
 
-    clienteMqtt.on('error', (err) => {
-      console.error('❌ Error de conexión en el comandante MQTT:', err.message);
+      clienteMqtt.on('error', (err) => {
+        clearTimeout(timeout);
+        clienteMqtt.end(true);
+        reject(err);
+      });
     });
 
     return res.status(200).json({
@@ -294,7 +319,7 @@ router.post('/comando', async (req: Request, res: Response) => {
 
   } catch (error: any) {
     console.error('❌ Error al enviar comando MQTT:', error.message);
-    return res.status(500).json({ exito: false, mensaje: 'Error interno al enviar comando' });
+    return res.status(500).json({ exito: false, mensaje: `Error interno: ${error.message}` });
   }
 });
 
