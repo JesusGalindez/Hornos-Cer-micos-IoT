@@ -102,7 +102,8 @@ async function iniciarSimuladorDinamico() {
   });
 
   cliente.on('message', (topico, mensaje) => {
-    if (topico === topicoComandos) {
+    // Usar validación flex por inclusión para evitar discrepancias de rutas SSL
+    if (topico.includes('comandos')) {
       const rawMsg = mensaje.toString();
       console.log(`🚨 ESP32: Comando manual recibido: "${rawMsg}"`);
       
