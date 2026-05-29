@@ -65,7 +65,7 @@ async function sembrarDatosPrueba() {
     const sqlUser1 = `
       INSERT INTO usuarios (id, correo, contrasena_hash, nombre)
       VALUES ('5a8288b2-132d-45db-9964-b040bf5ffbb7', 'alberto@ejemplo.com', $1, 'Alberto Galíndez')
-      ON CONFLICT (correo) DO NOTHING
+      ON CONFLICT (correo) DO UPDATE SET contrasena_hash = EXCLUDED.contrasena_hash
     `;
     await pool.query(sqlUser1, [contrasenaComunHash]);
 
@@ -80,7 +80,7 @@ async function sembrarDatosPrueba() {
     const sqlUser2 = `
       INSERT INTO usuarios (id, correo, contrasena_hash, nombre)
       VALUES ('f398c933-dc7c-4f5d-826d-a5a417438bfb', 'sebastian@ejemplo.com', $1, 'Sebastian Ettese')
-      ON CONFLICT (correo) DO NOTHING
+      ON CONFLICT (correo) DO UPDATE SET contrasena_hash = EXCLUDED.contrasena_hash
     `;
     await pool.query(sqlUser2, [contrasenaComunHash]);
 
@@ -95,7 +95,7 @@ async function sembrarDatosPrueba() {
     const sqlUser3 = `
       INSERT INTO usuarios (id, correo, contrasena_hash, nombre)
       VALUES ('24527d36-fafa-4366-80ea-3e3a90a454b2', 'abel@ejemplo.com', $1, 'Abel Inocente')
-      ON CONFLICT (correo) DO NOTHING
+      ON CONFLICT (correo) DO UPDATE SET contrasena_hash = EXCLUDED.contrasena_hash
     `;
     await pool.query(sqlUser3, [contrasenaComunHash]);
 
