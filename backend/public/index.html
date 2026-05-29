@@ -678,7 +678,7 @@
                 </div>
 
                 <div style="margin-top: 1.5rem">
-                    <button onclick="enviarAlHorno()" class="btn" id="btnProgramar">📤 Cargar Curva de Quema (Neon + MQTT)</button>
+                    <button onclick="enviarAlHorno()" class="btn" id="btnProgramar">📤 Cargar Curva de Quema</button>
                 </div>
             </div>
 
@@ -697,7 +697,7 @@
 
         <!-- SECCIÓN COMPLETA DE GUARDADO E HISTORIAL DE QUEMAS -->
         <section class="tarjeta" style="grid-column: span 2; margin-top: 1rem;">
-            <h2>💾 Guardar Registro de Quema Actual (Neon.com)</h2>
+            <h2>💾 Guardar Registro de Quema Actual</h2>
             <p style="color: var(--texto-mutado); font-size: 0.85rem; margin-bottom: 1.5rem;">Registra los tiempos y resultados de tu quema actual con notas detalladas para tu historial de producción.</p>
             
             <div class="inputs-fila" style="margin-bottom: 15px;">
@@ -722,10 +722,10 @@
                 </div>
             </div>
             
-            <button onclick="guardarRegistroQuema()" class="btn" style="background: linear-gradient(135deg, #d400ff 0%, #00f3ff 100%); box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);">💾 Guardar Registro en Neon.com</button>
+            <button onclick="guardarRegistroQuema()" class="btn" style="background: linear-gradient(135deg, #d400ff 0%, #00f3ff 100%); box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);">💾 Guardar Registro</button>
 
             <!-- TABLA DE HISTORIAL DE QUEMAS GUARDADAS -->
-            <h2 style="margin-top: 3.5rem; margin-bottom: 1.5rem; border-top: 1px solid var(--borde-tarjeta); padding-top: 2rem;">📚 Historial de Quemas Guardadas en Neon.com</h2>
+            <h2 style="margin-top: 3.5rem; margin-bottom: 1.5rem; border-top: 1px solid var(--borde-tarjeta); padding-top: 2rem;">📚 Historial de Quemas Guardadas</h2>
             <div class="tabla-contenedor">
                 <table id="tablaQuemasGuardadas">
                     <thead>
@@ -807,7 +807,7 @@
                             yAxisID: 'y'
                         },
                         {
-                            label: 'Monitoreo Real (Neon) - Historial Completo',
+                            label: 'Monitoreo Real - Historial Completo',
                             data: [],
                             borderColor: '#00f3ff',
                             backgroundColor: 'transparent',
@@ -1094,7 +1094,7 @@
                 alert('❌ Error de comunicación.');
             } finally {
                 btn.disabled = false;
-                btn.innerText = "📤 Cargar Curva de Quema (Neon + MQTT)";
+                btn.innerText = "📤 Cargar Curva de Quema";
             }
         }
 
@@ -1179,7 +1179,7 @@
 
                 const datos = await respuesta.json();
                 if (datos.exito) {
-                    alert('💾 ¡Historial de quema guardado exitosamente en Neon.com!');
+                    alert('💾 ¡Historial de quema guardado exitosamente!');
                     listarQuemasGuardadas(); // Actualizar la lista en pantalla
                     
                     // Limpiar notas
@@ -1203,7 +1203,7 @@
                     tbody.innerHTML = '';
 
                     if (datos.datos.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--texto-mutado);">No hay quemas guardadas en Neon.com.</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--texto-mutado);">No hay quemas guardadas.</td></tr>';
                         return;
                     }
 
