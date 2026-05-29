@@ -408,4 +408,55 @@ router.get('/quemas-guardadas', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * 8. ENDPOINT: Login de Usuarios para el Frontend
+ * Valida correo y contraseña, y retorna los detalles del usuario y sus dispositivos asociados.
+ */
+router.post('/login', async (req: Request, res: Response) => {
+  const { correo, contrasena } = req.body;
+
+  if (!correo || !contrasena) {
+    return res.status(400).json({ exito: false, mensaje: 'Correo y contraseña obligatorios' });
+  }
+
+  try {
+    // Buscar usuario por correo
+    const consultaUsuario = 'SELECT id, correo, contrasena_hash, nombre FROM usuarios WHERE correo = $1';
+    const resUsuario = await pool.query(consultaUsuario, [correo.toLowerCase().trim()]);
+
+    if (resUsuario.rows.length === 0) {
+      return res.status(401).json({ exito: false, mensaje: 'Correo o contraseña incorrectos' });
+    }
+
+    const usuario = resUsuario.rows[0];
+
+    // Verificar contraseña usando bcrypt
+    const contrasenaValida = await bcrypt.compare(contrasena, usuario.contrasena_hash);
+
+    if (!contrasenaValida) {
+      return res.status(401).json({ exito: false, mensaje: 'Correo o contraseña incorrectos' });
+    }
+
+    // Obtener los dispositivos (hornos) asociados a este usuario
+    const consultaDispositivos = 'SELECT id, nombre, estado, mqtt_usuario, creado_en FROM dispositivos WHERE usuario_id = $1';
+    const resDispositivos = await pool.query(consultaDispositivos, [usuario.id]);
+
+    // Responder con éxito y retornar datos de sesión
+    return res.status(200).json({
+      exito: true,
+      mensaje: '¡Autenticación exitosa!',
+      usuario: {
+        id: usuario.id,
+        nombre: usuario.nombre,
+        correo: usuario.correo
+      },
+      dispositivos: resDispositivos.rows
+    });
+
+  } catch (error: any) {
+    console.error('❌ Error en login de usuario:', error.message);
+    return res.status(500).json({ exito: false, mensaje: 'Error interno en el servidor de autenticación' });
+  }
+});
+
 export default router;

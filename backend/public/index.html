@@ -476,23 +476,171 @@
             color: #fff;
             box-shadow: 0 0 12px rgba(255, 123, 0, 0.35);
         }
+
+        /* --- ESTILOS DE LA PANTALLA DE LOGIN PREMIUM --- */
+        .pantalla-login {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 4rem);
+            padding: 1rem;
+        }
+
+        .login-tarjeta {
+            background: var(--bg-tarjeta);
+            border: 1px solid var(--borde-tarjeta);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 20px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), 0 0 40px rgba(255, 123, 0, 0.05);
+            text-align: center;
+            animation: deslizarEntrada 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes deslizarEntrada {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-logo {
+            font-size: 3.5rem;
+            margin-bottom: 0.5rem;
+            filter: drop-shadow(0 0 15px rgba(255, 123, 0, 0.5));
+            animation: flotar 3s infinite ease-in-out;
+        }
+
+        @keyframes flotar {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .login-tarjeta h2 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            background: var(--primario-degradado);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+        }
+
+        .login-tarjeta p {
+            color: var(--texto-mutado);
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+
+        .grupo-entrada-login {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+            margin-bottom: 1.25rem;
+        }
+
+        .grupo-entrada-login label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--texto-principal);
+            margin-bottom: 0.4rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .input-login {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--borde-tarjeta);
+            border-radius: 10px;
+            color: #fff;
+            padding: 0.85rem 1rem;
+            font-family: var(--fuente);
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .input-login:focus {
+            outline: none;
+            border-color: var(--primario-brillo);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 15px rgba(255, 123, 0, 0.15);
+        }
+
+        .btn-login {
+            background: var(--primario-degradado);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            cursor: pointer;
+            font-family: var(--fuente);
+            font-size: 1rem;
+            font-weight: 700;
+            padding: 1rem;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 1.5rem;
+            box-shadow: 0 0 20px rgba(255, 123, 0, 0.2);
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(255, 123, 0, 0.4);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="marca">
-            <span class="icono-fuego">🔥</span>
-            <div>
-                <h1>CeramikCloud IoT</h1>
-                <p style="font-size: 0.8rem; color: var(--texto-mutado)">SaaS de Monitoreo & Control Multitenant</p>
+    <!-- PANTALLA DE LOGIN PREMIUM -->
+    <div id="pantallaLogin" class="pantalla-login" style="display: flex;">
+        <div class="login-tarjeta">
+            <div class="login-logo">🔥</div>
+            <h2>CeramikCloud IoT</h2>
+            <p>Monitoreo y Control SaaS de Hornos Cerámicos</p>
+            
+            <form id="formularioLogin" onsubmit="realizarLogin(event)">
+                <div class="grupo-entrada-login">
+                    <label for="loginCorreo">Correo Electrónico</label>
+                    <input type="email" id="loginCorreo" class="input-login" required placeholder="ejemplo@correo.com" value="alberto@ejemplo.com">
+                </div>
+                
+                <div class="grupo-entrada-login" style="margin-bottom: 0.5rem;">
+                    <label for="loginContrasena">Contraseña</label>
+                    <input type="password" id="loginContrasena" class="input-login" required placeholder="••••••••" value="password123">
+                </div>
+                
+                <button type="submit" class="btn-login" id="btnLoginEnviar">🚀 Ingresar al Horno</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- PANTALLA PRINCIPAL DEL DASHBOARD -->
+    <div id="pantallaDashboard" style="display: none;">
+        <header>
+            <div class="marca">
+                <span class="icono-fuego">🔥</span>
+                <div>
+                    <h1>CeramikCloud IoT</h1>
+                    <p style="font-size: 0.8rem; color: var(--texto-mutado)">SaaS de Monitoreo & Control Multitenant</p>
+                </div>
             </div>
-        </div>
-        <div style="text-align: right">
-            <p style="font-size: 0.85rem; color: var(--texto-mutado)">Usuario Conectado</p>
-            <p style="font-weight: 600; font-size: 0.95rem; color: var(--secundario-brillo)">Alberto Galíndez</p>
-        </div>
-    </header>
+            <div style="text-align: right" id="headerUsuarioInfo">
+                <p style="font-size: 0.85rem; color: var(--texto-mutado)">Usuario Conectado</p>
+                <p style="font-weight: 600; font-size: 0.95rem; color: var(--secundario-brillo)" id="lblNombreUsuario">--</p>
+                <button onclick="cerrarSesion()" style="background:transparent; border:none; color:#ef4444; font-size:0.75rem; text-decoration:underline; cursor:pointer; margin-top:2px; font-weight:600;">Cerrar Sesión</button>
+            </div>
+        </header>
 
     <main class="contenedor-principal">
         <!-- SECCIÓN IZQUIERDA: GRÁFICO INTERACTIVO (HISTORIAL COMPLETO) -->
@@ -747,10 +895,11 @@
             </div>
         </section>
     </main>
+    </div> <!-- Cierre de pantallaDashboard -->
 
     <script>
-        const usuarioId = "5a8288b2-132d-45db-9964-b040bf5ffbb7";
-        const dispositivoId = "b4578e9b-0081-42ab-ba41-d68a994abfe2";
+        let usuarioId = "";
+        let dispositivoId = "";
         
         let rampasMemoria = [
             { paso: 1, duracion_minutos: 60, temp_destino: 150, estado_horno: 1 },
@@ -1636,12 +1785,7 @@
                     const barra = document.getElementById('progresoBarraFill');
 
                     if (txtPaso) txtPaso.innerHTML = `⏱️ Inicia en: <span style="font-weight: 800; color: #fbbf24; font-family: monospace; font-size: 0.9rem;">${minutos}m ${segundos}s</span>`;
-                    if (txtTiempo) txtTiempo.innerText = `Inicio: ${horaInicioProgramadaUI.toLocaleTimeString()}`;
-                    
-                    let totalMinutos = rampasMemoria.reduce((acc, r) => acc + parseInt(r.duracion_minutos), 0);
-                    let horaFin = new Date(horaInicioProgramadaUI.getTime() + totalMinutos * 60000);
-                    if (txtObj) txtObj.innerText = `Fin y Apagado: ${horaFin.toLocaleTimeString()}`;
-                    if (barra) barra.style.width = '0%';
+if (barra) barra.style.width = '0%';
                 } else {
                     // Limpiar y restaurar
                     horaInicioProgramadaUI = null;
@@ -1653,11 +1797,108 @@
             }, 1000);
         }
 
-        window.onload = () => {
+        // --- LOGICA DE LOGIN Y AUTENTICACION MULTI-TENANT ---
+        async function realizarLogin(event) {
+            event.preventDefault();
+            
+            const correo = document.getElementById('loginCorreo').value;
+            const contrasena = document.getElementById('loginContrasena').value;
+            const btnSubmit = document.getElementById('btnLoginEnviar');
+
+            if (!correo || !contrasena) return;
+
+            btnSubmit.disabled = true;
+            btnSubmit.innerText = "🚀 Ingresando...";
+
+            try {
+                const respuesta = await fetch('/api/v1/mqtt/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ correo, contrasena })
+                });
+
+                const datos = await respuesta.json();
+
+                if (datos.exito) {
+                    // Si el usuario tiene dispositivos asociados, usar el primero
+                    if (!datos.dispositivos || datos.dispositivos.length === 0) {
+                        alert('⚠️ Tu cuenta no tiene ningún horno cerámico asignado en la base de datos.');
+                        btnSubmit.disabled = false;
+                        btnSubmit.innerText = "🚀 Ingresar al Horno";
+                        return;
+                    }
+
+                    const dispositivoActivo = datos.dispositivos[0];
+                    
+                    // Almacenar los datos de la sesión en localStorage
+                    const payloadSesion = {
+                        usuario: datos.usuario,
+                        dispositivo: dispositivoActivo,
+                        todosDispositivos: datos.dispositivos
+                    };
+                    localStorage.setItem('ceramikcloud_sesion', JSON.stringify(payloadSesion));
+
+                    // Inyectar variables globales del inquilino
+                    usuarioId = datos.usuario.id;
+                    dispositivoId = dispositivoActivo.id;
+
+                    // Cambiar estados de pantallas
+                    document.getElementById('pantallaLogin').style.display = 'none';
+                    document.getElementById('pantallaDashboard').style.display = 'block';
+
+                    // Actualizar perfil visual en el Header
+                    document.getElementById('lblNombreUsuario').innerText = datos.usuario.nombre;
+
+                    // Cargar e inicializar el Dashboard de forma limpia
+                    iniciarDashboardModular();
+
+                } else {
+                    alert('❌ Error: ' + datos.mensaje);
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerText = "🚀 Ingresar al Horno";
+                }
+            } catch (err) {
+                alert('❌ Error al conectar con el servidor de autenticación.');
+                btnSubmit.disabled = false;
+                btnSubmit.innerText = "🚀 Ingresar al Horno";
+            }
+        }
+
+        function cerrarSesion() {
+            // Detener bucles de telemetría y contadores
+            if (intervaloTelemetria) {
+                clearInterval(intervaloTelemetria);
+            }
+            if (intervaloCuentaRegresiva) {
+                clearInterval(intervaloCuentaRegresiva);
+            }
+
+            // Limpiar sesión local
+            localStorage.removeItem('ceramikcloud_sesion');
+            usuarioId = "";
+            dispositivoId = "";
+
+            // Destruir y reiniciar la instancia del gráfico si existe para evitar solapamientos
+            if (chart) {
+                chart.destroy();
+                chart = undefined;
+            }
+
+            // Cambiar estados de pantallas
+            document.getElementById('pantallaLogin').style.display = 'flex';
+            document.getElementById('pantallaDashboard').style.display = 'none';
+            document.getElementById('loginContrasena').value = ""; // Limpiar campo contraseña
+            document.getElementById('btnLoginEnviar').disabled = false;
+            document.getElementById('btnLoginEnviar').innerText = "🚀 Ingresar al Horno";
+        }
+
+        // Función que encapsula el arranque completo del dashboard para un usuario autenticado
+        function iniciarDashboardModular() {
+            // Inicializar gráfico de rampa vacío
             inicializarGrafico();
             actualizarTablaUI();
             
-            // Cargar de forma reactiva las plantillas guardadas en localStorage al cargar la página
+            // Cargar de forma reactiva las plantillas guardadas en localStorage
             recargarSelectPlantillas("");
 
             // Asignar fechas iniciales recomendadas
@@ -1666,12 +1907,46 @@
             document.getElementById('guardarInicio').value = obtenerFechaFormateada(haceUnaHora);
             document.getElementById('guardarFin').value = obtenerFechaFormateada(ahora);
 
-            // Cargar historial de quemas desde Neon
+            // Cargar historial de quemas desde la base de datos
             listarQuemasGuardadas();
             
+            // Iniciar loops periódicos de monitoreo en tiempo real
             iniciarCuentaRegresivaUI();
             consultarTelemetriaEnTiempoReal();
+            
+            if (intervaloTelemetria) {
+                clearInterval(intervaloTelemetria);
+            }
             intervaloTelemetria = setInterval(consultarTelemetriaEnTiempoReal, 3000);
+        }
+
+        window.onload = () => {
+            // Verificar si el usuario ya tiene una sesión activa al cargar
+            const sesionGuardada = localStorage.getItem('ceramikcloud_sesion');
+            
+            if (sesionGuardada) {
+                try {
+                    const datosSesion = JSON.parse(sesionGuardada);
+                    usuarioId = datosSesion.usuario.id;
+                    dispositivoId = datosSesion.dispositivo.id;
+
+                    // Cambiar estados de pantallas
+                    document.getElementById('pantallaLogin').style.display = 'none';
+                    document.getElementById('pantallaDashboard').style.display = 'block';
+
+                    // Actualizar perfil visual en el Header
+                    document.getElementById('lblNombreUsuario').innerText = datosSesion.usuario.nombre;
+
+                    // Arrancar dashboard
+                    iniciarDashboardModular();
+                } catch(e) {
+                    cerrarSesion();
+                }
+            } else {
+                // Forzar pantalla de login
+                document.getElementById('pantallaLogin').style.display = 'flex';
+                document.getElementById('pantallaDashboard').style.display = 'none';
+            }
         };
     </script>
 </body>
