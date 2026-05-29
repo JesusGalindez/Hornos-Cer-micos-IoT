@@ -7,7 +7,7 @@ const USUARIO_ID = '5a8288b2-132d-45db-9964-b040bf5ffbb7';
 
 // Credenciales del backend / dispositivo creadas en HiveMQ
 const MQTT_USUARIO = 'sistema_backend';
-const MQTT_CONTRASENA = 'token_backend_sistema_9988';
+const MQTT_CONTRASENA = 'Token_backend_sistema_9988';
 
 const topicoTelemetria = `usuarios/${USUARIO_ID}/hornos/${DISPOSITIVO_ID}/telemetria`;
 const topicoEstado = `usuarios/${USUARIO_ID}/hornos/${DISPOSITIVO_ID}/estado`;
