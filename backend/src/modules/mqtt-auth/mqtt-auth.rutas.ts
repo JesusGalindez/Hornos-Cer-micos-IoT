@@ -199,13 +199,19 @@ router.post('/programar', async (req: Request, res: Response) => {
     console.warn(`⚠️ Advertencia de base de datos (Modo offline activo): ${dbError.message}`);
   }
 
-  try {
     // C. Publicar en Mosquitto MQTT en el tópico de comandos
-    const clienteMqtt = mqtt.connect(BROKER_URL, {
+    const opcionesConexion: mqtt.IClientOptions = {
       username: USUARIO_SISTEMA,
       password: CONTRASENA_SISTEMA,
       clientId: `backend_publicador_${Math.random().toString(16).substr(2, 8)}`,
-    });
+    };
+
+    // Configurar TLS para HiveMQ Cloud
+    if (BROKER_URL.startsWith('mqtts://')) {
+      opcionesConexion.rejectUnauthorized = false;
+    }
+
+    const clienteMqtt = mqtt.connect(BROKER_URL, opcionesConexion);
 
     clienteMqtt.on('connect', () => {
       const topicoComandos = `usuarios/${usuario_id}/hornos/${dispositivo_id}/comandos`;
@@ -220,6 +226,10 @@ router.post('/programar', async (req: Request, res: Response) => {
         console.log(`📤 Backend: Nueva curva "${nombre_curva}" (Inicio: ${req.body.hora_inicio || 'Inmediato'}) enviada por MQTT al horno "${dispositivo_id}".`);
         clienteMqtt.end();
       });
+    });
+
+    clienteMqtt.on('error', (err) => {
+      console.error('❌ Error de conexión en el publicador MQTT:', err.message);
     });
 
     const mensajeRespuesta = dbExito
@@ -250,11 +260,18 @@ router.post('/comando', async (req: Request, res: Response) => {
   }
 
   try {
-    const clienteMqtt = mqtt.connect(BROKER_URL, {
+    const opcionesConexion: mqtt.IClientOptions = {
       username: USUARIO_SISTEMA,
       password: CONTRASENA_SISTEMA,
       clientId: `backend_comandante_${Math.random().toString(16).substr(2, 8)}`,
-    });
+    };
+
+    // Configurar TLS para HiveMQ Cloud
+    if (BROKER_URL.startsWith('mqtts://')) {
+      opcionesConexion.rejectUnauthorized = false;
+    }
+
+    const clienteMqtt = mqtt.connect(BROKER_URL, opcionesConexion);
 
     clienteMqtt.on('connect', () => {
       const topicoComandos = `usuarios/${usuario_id}/hornos/${dispositivo_id}/comandos`;
@@ -264,6 +281,10 @@ router.post('/comando', async (req: Request, res: Response) => {
         console.log(`📤 Backend: Comando manual "${accion}" enviado por MQTT al horno "${dispositivo_id}".`);
         clienteMqtt.end();
       });
+    });
+
+    clienteMqtt.on('error', (err) => {
+      console.error('❌ Error de conexión en el comandante MQTT:', err.message);
     });
 
     return res.status(200).json({
