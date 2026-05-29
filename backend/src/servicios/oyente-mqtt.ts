@@ -142,12 +142,23 @@ export const iniciarOyenteMQTT = () => {
   });
 
   // Evento: Error de Conexión
-  cliente.on('error', (error) => {
-    console.error('❌ Error crítico en el cliente MQTT:', error);
+  let ultimoErrorReg = 0;
+  cliente.on('error', (error: any) => {
+    // Evitar spam de logs cada 1 segundo si el broker no está conectado
+    const ahora = Date.now();
+    if (ahora - ultimoErrorReg > 15000) {
+      console.log('⚠️ Servicio MQTT en modo de espera: El Broker no está respondiendo temporalmente.', error.message);
+      ultimoErrorReg = ahora;
+    }
   });
 
   // Evento: Reintento de Conexión
+  let ultimoReintentReg = 0;
   cliente.on('reconnect', () => {
-    console.log('🔄 Reintentando conectar al Broker MQTT...');
+    const ahora = Date.now();
+    if (ahora - ultimoReintentReg > 15000) {
+      console.log('🔄 Reintentando conectar silenciosamente al Broker MQTT...');
+      ultimoReintentReg = ahora;
+    }
   });
 };
