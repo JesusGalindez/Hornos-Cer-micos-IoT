@@ -59,6 +59,12 @@ async function iniciarSimuladorDinamico() {
     }
   } catch (error: any) {
     console.warn(`⚠️ No se pudo conectar a Neon/Postgres (${error.message}). Usando ID de inquilino por defecto.`);
+  } finally {
+    // Cerrar la conexión de la base de datos para liberar la pila de eventos de red
+    try {
+      await pool.end();
+      console.log('🔌 Conexión a Base de Datos liberada de la pila de eventos.');
+    } catch (e) {}
   }
 
   topicoTelemetria = `usuarios/${usuarioId}/hornos/${DISPOSITIVO_ID}/telemetria`;
