@@ -47,10 +47,21 @@ services:
       - ./backend/public:/app/public
     env_file:
       - ./backend/.env
-    environment:
-      - MQTT_BROKER_URL=mqtt://broker_mqtt:1883
     depends_on:
       - base_datos
+    networks:
+      - red_iot
+
+  # 4. Simulador de Hardware Cerámico ESP32 Automatizado
+  simulador_horno:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: hornos_simulador
+    restart: always
+    command: npx ts-node src/simuladores/simulador.ts
+    env_file:
+      - ./backend/.env
     networks:
       - red_iot
 
