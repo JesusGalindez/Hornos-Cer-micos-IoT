@@ -1,8 +1,8 @@
 import mqtt from 'mqtt';
 import pool from '../config/base_datos';
 
-// Datos de conexión al broker MQTT en la nube de HiveMQ
-const BROKER_URL = 'mqtts://624fe0b39ecc4aa4b5f551f2fd50a353.s1.eu.hivemq.cloud:8883';
+// Datos de conexión al broker MQTT en la nube de HiveMQ vía WebSockets Seguros (wss)
+const BROKER_URL = 'wss://624fe0b39ecc4aa4b5f551f2fd50a353.s1.eu.hivemq.cloud:443/mqtt';
 const DISPOSITIVO_ID = 'b4578e9b-0081-42ab-ba41-d68a994abfe2';
 
 // Credenciales del backend / dispositivo creadas en HiveMQ
