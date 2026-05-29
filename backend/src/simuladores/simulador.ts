@@ -11,7 +11,7 @@ const MQTT_CONTRASENA = 'Token_backend_sistema_9988';
 
 const topicoTelemetria = `usuarios/${USUARIO_ID}/hornos/${DISPOSITIVO_ID}/telemetria`;
 const topicoEstado = `usuarios/${USUARIO_ID}/hornos/${DISPOSITIVO_ID}/estado`;
-const topicoComandos = `usuarios/${USUARIO_ID}/hornos/${DISPOSITIVO_ID}/comandos`;
+const topicoComandos = `usuarios/+/hornos/${DISPOSITIVO_ID}/comandos`;
 
 // ============================================================================
 // CONFIGURACIÓN DE LA CURVA DE PORCELANA CHINA DE ALTA TEMPERATURA (15 MINUTOS)
