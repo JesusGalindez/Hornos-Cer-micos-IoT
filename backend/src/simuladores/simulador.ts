@@ -1,13 +1,13 @@
 import mqtt from 'mqtt';
 
-// Datos de conexión al broker MQTT
-const BROKER_URL = 'mqtt://localhost:1883';
+// Datos de conexión al broker MQTT en la nube de HiveMQ
+const BROKER_URL = 'mqtts://624fe0b39ecc4aa4b5f551f2fd50a353.s1.eu.hivemq.cloud:8883';
 const DISPOSITIVO_ID = 'b4578e9b-0081-42ab-ba41-d68a994abfe2';
 const USUARIO_ID = '5a8288b2-132d-45db-9964-b040bf5ffbb7';
 
-// Credenciales registradas en la base de datos
-const MQTT_USUARIO = 'horno_esp32_1';
-const MQTT_CONTRASENA = 'token_esp32_secreto_123';
+// Credenciales del backend / dispositivo creadas en HiveMQ
+const MQTT_USUARIO = 'sistema_backend';
+const MQTT_CONTRASENA = 'token_backend_sistema_9988';
 
 const topicoTelemetria = `usuarios/${USUARIO_ID}/hornos/${DISPOSITIVO_ID}/telemetria`;
 const topicoEstado = `usuarios/${USUARIO_ID}/hornos/${DISPOSITIVO_ID}/estado`;
