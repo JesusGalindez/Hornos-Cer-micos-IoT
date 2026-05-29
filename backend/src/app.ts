@@ -1,3 +1,6 @@
+// ============================================================================
+// Release v2.0.2 - Sincronizacion de Grafica y Limpieza de UI
+// ============================================================================
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
