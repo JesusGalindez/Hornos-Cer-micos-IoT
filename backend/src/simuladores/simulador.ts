@@ -72,6 +72,7 @@ async function iniciarSimuladorDinamico() {
     clientId: `esp32_horno_porcelana_${DISPOSITIVO_ID.substring(0, 8)}`,
     clean: true,
     rejectUnauthorized: false,
+    protocol: 'wss', // Forzar protocolo WebSockets seguro
     will: {
       topic: topicoEstado,
       payload: Buffer.from('desconectado'),
