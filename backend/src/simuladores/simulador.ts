@@ -1,64 +1,166 @@
 import mqtt from 'mqtt';
+import pool from '../config/base_datos';
 
 // Datos de conexión al broker MQTT en la nube de HiveMQ
 const BROKER_URL = 'mqtts://624fe0b39ecc4aa4b5f551f2fd50a353.s1.eu.hivemq.cloud:8883';
 const DISPOSITIVO_ID = 'b4578e9b-0081-42ab-ba41-d68a994abfe2';
-const USUARIO_ID = '5a8288b2-132d-45db-9964-b040bf5ffbb7';
 
 // Credenciales del backend / dispositivo creadas en HiveMQ
 const MQTT_USUARIO = 'sistema_backend';
 const MQTT_CONTRASENA = 'Token_backend_sistema_9988';
 
-const topicoTelemetria = `usuarios/${USUARIO_ID}/hornos/${DISPOSITIVO_ID}/telemetria`;
-const topicoEstado = `usuarios/${USUARIO_ID}/hornos/${DISPOSITIVO_ID}/estado`;
-const topicoComandos = `usuarios/${USUARIO_ID}/hornos/${DISPOSITIVO_ID}/comandos`;
+async function iniciarSimuladorDinamico() {
+  console.log('⚡ Conectando a la Base de Datos para resolver IDs de inquilinos...');
+  let usuarioId = '5a8288b2-132d-45db-9964-b040bf5ffbb7'; // Valor por defecto
 
-// ============================================================================
-// CONFIGURACIÓN DE LA CURVA DE PORCELANA CHINA DE ALTA TEMPERATURA (15 MINUTOS)
-// ============================================================================
-// El simulador enviará datos cada 3 segundos reales.
-// Rampa inicial por defecto (reemplazable dinámicamente por MQTT)
-let programaQuema: any[] = [
-  { paso: 1, tipo: 'Rampa a 200°C', duracion_seg: 180, temp_final: 200.0, estado_horno: 1 },    // 3 minutos
-  { paso: 2, tipo: 'Meseta de 200°C', duracion_seg: 300, temp_final: 200.0, estado_horno: 1 },  // 5 minutos
-  { paso: 3, tipo: 'Rampa a 500°C', duracion_seg: 240, temp_final: 500.0, estado_horno: 1 },    // 4 minutos
-  { paso: 4, tipo: 'Meseta de 500°C', duracion_seg: 300, temp_final: 500.0, estado_horno: 1 },  // 5 minutes
-  { paso: 5, tipo: 'Rampa a 800°C', duracion_seg: 240, temp_final: 800.0, estado_horno: 1 },    // 4 minutos
-  { paso: 6, tipo: 'Meseta de 800°C', duracion_seg: 300, temp_final: 800.0, estado_horno: 1 },  // 5 minutos
-  { paso: 7, tipo: 'Rampa Final a 1300°C', duracion_seg: 240, temp_final: 1300.0, estado_horno: 1 } // 4 minutos
-];
-
-// Variables iniciales físicas
-let temperaturaActual = 20.0;
-let tempInicialPaso = 20.0;
-let pasoActualIdx = 0;
-let tiempoEnPaso = 0;
-let totalPasos = programaQuema.length;
-let quemaFinalizada = false;
-let quemaIniciada = false; // El simulador inicia en espera pasiva (reposo)
-let horaInicioProgramada: Date | null = null;
-
-// Registro del tiempo real total
-let tiempoTotalTranscurrido = 0;
-let totalDuracionProgramaSeg = programaQuema.reduce((acc, p) => acc + p.duracion_seg, 0);
-let totalDuracionMinutos = Math.floor(totalDuracionProgramaSeg / 60);
-
-console.log(`🤖 SIMULADOR DE PORCELANA IMPERIAL CHINA (Duración: ${totalDuracionMinutos} minutos)`);
-console.log('📢 Esperando comando "INICIAR_QUEMA" o "PROGRAMAR_CURVA" desde la App...');
-console.log(`📡 Conectando al broker en ${BROKER_URL}...`);
-
-const cliente = mqtt.connect(BROKER_URL, {
-  username: MQTT_USUARIO,
-  password: MQTT_CONTRASENA,
-  clientId: `esp32_horno_porcelana_${DISPOSITIVO_ID.substring(0, 8)}`,
-  clean: true,
-  rejectUnauthorized: false, // Permitir conexiones seguras SSL/TLS en brokers en la nube
-  will: {
-    topic: topicoEstado,
-    payload: Buffer.from('desconectado'),
-    qos: 1,
-    retain: true,
+  try {
+    const consulta = 'SELECT usuario_id FROM dispositivos WHERE id = $1';
+    const resultado = await pool.query(consulta, [DISPOSITIVO_ID]);
+    if (resultado.rows.length > 0) {
+      usuarioId = resultado.rows[0].usuario_id;
+      console.log(`🎯 ID de Inquilino resuelto dinámicamente: "${usuarioId}"`);
+    } else {
+      console.warn(`⚠️ Horno con ID "${DISPOSITIVO_ID}" no encontrado. Usando ID de inquilino por defecto.`);
+    }
+  } catch (error: any) {
+    console.warn(`⚠️ No se pudo conectar a Neon/Postgres (${error.message}). Usando ID de inquilino por defecto.`);
   }
+
+  const topicoTelemetria = `usuarios/${usuarioId}/hornos/${DISPOSITIVO_ID}/telemetria`;
+  const topicoEstado = `usuarios/${usuarioId}/hornos/${DISPOSITIVO_ID}/estado`;
+  const topicoComandos = `usuarios/${usuarioId}/hornos/${DISPOSITIVO_ID}/comandos`;
+
+  // Configurar cliente MQTT
+  const cliente = mqtt.connect(BROKER_URL, {
+    username: MQTT_USUARIO,
+    password: MQTT_CONTRASENA,
+    clientId: `esp32_horno_porcelana_${DISPOSITIVO_ID.substring(0, 8)}`,
+    clean: true,
+    rejectUnauthorized: false,
+    will: {
+      topic: topicoEstado,
+      payload: Buffer.from('desconectado'),
+      qos: 1,
+      retain: true,
+    }
+  });
+
+  return { cliente, topicoTelemetria, topicoEstado, topicoComandos };
+}
+
+// Declarar variables globales que usará el ciclo del simulador
+let cliente: mqtt.MqttClient;
+let topicoTelemetria = '';
+let topicoEstado = '';
+let topicoComandos = '';
+
+iniciarSimuladorDinamico().then((res) => {
+  cliente = res.cliente;
+  topicoTelemetria = res.topicoTelemetria;
+  topicoEstado = res.topicoEstado;
+  topicoComandos = res.topicoComandos;
+
+  // Registrar listeners en el cliente iniciado
+  cliente.on('connect', () => {
+    console.log('✅ ESP32: Conectado al Broker MQTT exitosamente.');
+
+    // Notificar estado conectado
+    cliente.publish(topicoEstado, 'conectado', { qos: 1, retain: true });
+
+    // Suscribirse a comandos
+    cliente.subscribe(topicoComandos, (error) => {
+      if (!error) {
+        console.log(`📥 ESP32: Suscrito a comandos en "${topicoComandos}"`);
+      }
+    });
+
+    // Iniciar loop periódico
+    if (intervaloTelemetria) {
+      clearInterval(intervaloTelemetria);
+    }
+    intervaloTelemetria = setInterval(procesarCicloTelemetria, 3000);
+  });
+
+  cliente.on('message', (topico, mensaje) => {
+    if (topico === topicoComandos) {
+      const rawMsg = mensaje.toString();
+      console.log(`🚨 ESP32: Comando manual recibido: "${rawMsg}"`);
+      
+      let accion = "";
+      let rampasRecibidas: any[] = [];
+      let nombreCurvaRecibida = "";
+      let horaInicioRecibida = "";
+      
+      try {
+        const json = JSON.parse(rawMsg);
+        if (json.accion) accion = json.accion;
+        if (json.rampas) rampasRecibidas = json.rampas;
+        if (json.nombre_curva) nombreCurvaRecibida = json.nombre_curva;
+        if (json.hora_inicio) horaInicioRecibida = json.hora_inicio;
+      } catch(e) {
+        accion = rawMsg;
+      }
+
+      if (accion.includes('PROGRAMAR_CURVA') && rampasRecibidas.length > 0) {
+        console.log(`📝 ESP32: ¡Nueva curva de quema recibida en caliente! "${nombreCurvaRecibida || 'Curva Personalizada'}"`);
+        
+        programaQuema = rampasRecibidas.map(r => ({
+          paso: r.paso,
+          tipo: `Paso ${r.paso} (${parseInt(r.estado_horno) === 1 ? '🟢 Quema' : '🛑 Enfriamiento'})`,
+          duracion_seg: r.duracion_seg,
+          temp_final: parseFloat(r.temp_final),
+          estado_horno: r.estado_horno !== undefined ? parseInt(r.estado_horno) : 1,
+          limite_ssr: r.limite_ssr !== undefined ? parseInt(r.limite_ssr) : 100
+        }));
+
+        console.log("⚙️ ESP32: Pasos cargados en memoria física:");
+        programaQuema.forEach(p => {
+          console.log(`   [Paso ${p.paso}] Meta: ${p.temp_final}°C | Duración: ${Math.floor(p.duracion_seg/60)} min | Relé: ${p.estado_horno === 1 ? '🟢 ON' : '🛑 OFF'} | Límite SSR: ${p.limite_ssr}%`);
+        });
+        
+        totalPasos = programaQuema.length;
+        pasoActualIdx = 0;
+        tiempoEnPaso = 0;
+        tiempoTotalTranscurrido = 0;
+        tempInicialPaso = temperaturaActual;
+        quemaFinalizada = false;
+        
+        totalDuracionProgramaSeg = programaQuema.reduce((acc, p) => acc + p.duracion_seg, 0);
+        totalDuracionMinutos = Math.floor(totalDuracionProgramaSeg / 60);
+        
+        console.log(`⚙️ ESP32: Temporizador del regulador reconfigurado: total ${totalDuracionMinutos} minutos.`);
+        
+        if (horaInicioRecibida) {
+          horaInicioProgramada = new Date(horaInicioRecibida);
+          quemaIniciada = false;
+          console.log(`⏱️ ESP32: ¡Temporizador Diferido Configurado! La quema iniciará automáticamente a las ${horaInicioProgramada.toLocaleString()}`);
+        } else {
+          horaInicioProgramada = null;
+          quemaIniciada = true;
+          console.log('🔥 ESP32: ¡Cronograma cargado e iniciado automáticamente!');
+        }
+        
+      } else if (accion.includes('INICIAR_QUEMA')) {
+        if (!quemaIniciada) {
+          console.log('🔥 ESP32: Comando "INICIAR_QUEMA" detectado. ¡Encendiendo quemadores e iniciando cronograma rampa!');
+          quemaIniciada = true;
+          tiempoTotalTranscurrido = 0;
+          tiempoEnPaso = 0;
+          pasoActualIdx = 0;
+          tempInicialPaso = temperaturaActual;
+          quemaFinalizada = false;
+        }
+      } else if (accion.includes('APAGAR_EMERGENCIA')) {
+        console.warn('🛑 ESP32: PARADA DE EMERGENCIA ACTIVA. Reseteando resistencias.');
+        quemaIniciada = false;
+        temperaturaActual = 20.0;
+        pasoActualIdx = 0;
+        tiempoEnPaso = 0;
+        tiempoTotalTranscurrido = 0;
+        cliente.publish(topicoEstado, 'desconectado', { qos: 1, retain: true });
+      }
+    }
+  });
 });
 
 let intervaloTelemetria: NodeJS.Timeout;
