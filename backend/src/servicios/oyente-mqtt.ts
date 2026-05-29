@@ -12,12 +12,19 @@ const CONTRASENA_SISTEMA = process.env.MQTT_CONTRASENA_SISTEMA || 'token_backend
 export const iniciarOyenteMQTT = () => {
   console.log(`🔌 Conectando Oyente MQTT al Broker en: ${BROKER_URL}...`);
 
-  const cliente = mqtt.connect(BROKER_URL, {
+  const opcionesConexion: mqtt.IClientOptions = {
     username: USUARIO_SISTEMA,
     password: CONTRASENA_SISTEMA,
     clientId: `backend_oyente_service_${Math.random().toString(16).substr(2, 8)}`,
     clean: true,
-  });
+  };
+
+  // Habilitar TLS para HiveMQ Cloud
+  if (BROKER_URL.startsWith('mqtts://')) {
+    opcionesConexion.rejectUnauthorized = false;
+  }
+
+  const cliente = mqtt.connect(BROKER_URL, opcionesConexion);
 
   // Evento: Conexión Exitosa al Broker
   cliente.on('connect', () => {
