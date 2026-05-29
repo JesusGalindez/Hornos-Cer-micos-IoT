@@ -6,8 +6,8 @@ const BROKER_URL = 'mqtts://624fe0b39ecc4aa4b5f551f2fd50a353.s1.eu.hivemq.cloud:
 const DISPOSITIVO_ID = 'b4578e9b-0081-42ab-ba41-d68a994abfe2';
 
 // Credenciales del backend / dispositivo creadas en HiveMQ
-const MQTT_USUARIO = 'horno_esp32_1';
-const MQTT_CONTRASENA = 'Token_esp32_secreto_123';
+const MQTT_USUARIO = 'sistema_backend';
+const MQTT_CONTRASENA = 'Token_backend_sistema_9988';
 
 // ============================================================================
 // CONFIGURACIÓN DE LA CURVA DE PORCELANA CHINA DE ALTA TEMPERATURA (15 MINUTOS)
