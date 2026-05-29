@@ -16,7 +16,14 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 
 // Servir archivos estáticos del panel frontal
-app.use(express.static(path.join(__dirname, '../public')));
+// Esta resolución dinámica funciona perfectamente tanto en desarrollo (src/) como en producción (dist/)
+const rutaPublica = __dirname.includes('dist') 
+  ? path.join(__dirname, '../public') 
+  : path.join(__dirname, '../public');
+
+// Si por alguna razón el build no tiene la estructura, se busca un nivel arriba de forma segura
+app.use(express.static(rutaPublica));
+app.use(express.static(path.join(process.cwd(), 'public')));
 
 // --- PARSERS DE CUERPO (BODY PARSERS) ---
 // JSON Parser para API estándar

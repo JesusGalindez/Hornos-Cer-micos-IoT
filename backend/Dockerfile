@@ -19,8 +19,11 @@ COPY src/ ./src/
 # Compilar TypeScript a JavaScript
 RUN npm run build
 
+# Copiar la carpeta pública (Frontend) para producción
+COPY public/ ./public/
+
 # Exponer el puerto de la aplicación
 EXPOSE 3000
 
-# Comando para ejecutar la aplicación en modo desarrollo (para pruebas rápidas con docker-compose)
-CMD ["npm", "run", "dev"]
+# Comando para ejecutar la aplicación en producción
+CMD ["npm", "start"]
