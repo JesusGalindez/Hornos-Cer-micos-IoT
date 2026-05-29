@@ -1550,7 +1550,9 @@
 
                     // C. Actualizar Widget de Progreso de Rampa y LEDs si no hay temporizador activo
                     if (!horaInicioProgramadaUI) {
-                        const minutosTranscurridos = (registros.length * 3) / 60;
+                        const tInicio = new Date(registros[0].tiempo).getTime();
+                        const tActual = new Date(registroReciente.tiempo).getTime();
+                        const minutosTranscurridos = (tActual - tInicio) / 60000;
                         actualizarProgresoQuema(minutosTranscurridos, temp);
 
                         const led = document.getElementById('indicadorLed');
@@ -1579,11 +1581,16 @@
                         }
                     }
 
-                    // D. Graficar la telemetría acumulada completa desde el inicio
-                    const datosRealesGrafica = registros.map((r, index) => ({
-                        x: (index * 3) / 60, // Dividido por 60 para mostrar el eje x en MINUTOS en vez de segundos
-                        y: parseFloat(r.temperatura)
-                    }));
+                    // D. Graficar la telemetría acumulada completa desde el inicio usando diferencias de tiempo reales
+                    const tInicio = new Date(registros[0].tiempo).getTime();
+                    const datosRealesGrafica = registros.map((r) => {
+                        const tActual = new Date(r.tiempo).getTime();
+                        const minutosTranscurridos = (tActual - tInicio) / 60000;
+                        return {
+                            x: parseFloat(minutosTranscurridos.toFixed(2)), // Precisión de centésimas de minuto
+                            y: parseFloat(r.temperatura)
+                        };
+                    });
 
                     chart.data.datasets[1].data = datosRealesGrafica;
                     chart.update();

@@ -1,8 +1,8 @@
 import mqtt from 'mqtt';
 import pool from '../config/base_datos';
 
-// Datos de conexión al broker MQTT en la nube de HiveMQ vía WebSockets Seguros (wss)
-const BROKER_URL = 'wss://624fe0b39ecc4aa4b5f551f2fd50a353.s1.eu.hivemq.cloud:443/mqtt';
+// Datos de conexión al broker MQTT en la nube de HiveMQ vía TCP seguro (mqtts)
+const BROKER_URL = 'mqtts://624fe0b39ecc4aa4b5f551f2fd50a353.s1.eu.hivemq.cloud:8883';
 const DISPOSITIVO_ID = 'b4578e9b-0081-42ab-ba41-d68a994abfe2';
 
 // Credenciales del backend / dispositivo creadas en HiveMQ
@@ -69,7 +69,9 @@ async function iniciarSimuladorDinamico() {
 
   topicoTelemetria = `usuarios/${usuarioId}/hornos/${DISPOSITIVO_ID}/telemetria`;
   topicoEstado = `usuarios/${usuarioId}/hornos/${DISPOSITIVO_ID}/estado`;
-  topicoComandos = `usuarios/+/hornos/${DISPOSITIVO_ID}/comandos`;
+  topicoComandos = `usuarios/${usuarioId}/hornos/${DISPOSITIVO_ID}/comandos`;
+
+  console.log(`📡 Conectando al broker MQTT en ${BROKER_URL}...`);
 
   // Configurar cliente MQTT
   cliente = mqtt.connect(BROKER_URL, {
@@ -77,8 +79,7 @@ async function iniciarSimuladorDinamico() {
     password: MQTT_CONTRASENA,
     clientId: `esp32_horno_porcelana_${DISPOSITIVO_ID.substring(0, 8)}`,
     clean: true,
-    rejectUnauthorized: false,
-    protocol: 'wss', // Forzar protocolo WebSockets seguro
+    rejectUnauthorized: false, // Ignorar errores de verificación de CA para evitar fallos de certificados
     will: {
       topic: topicoEstado,
       payload: Buffer.from('desconectado'),
@@ -108,10 +109,24 @@ async function iniciarSimuladorDinamico() {
     intervaloTelemetria = setInterval(procesarCicloTelemetria, 3000);
   });
 
+  cliente.on('error', (error) => {
+    console.error('❌ ESP32 MQTT Error:', error.message);
+  });
+
+  cliente.on('reconnect', () => {
+    console.log('🔄 ESP32 MQTT: Intentando reconectar...');
+  });
+
+  cliente.on('offline', () => {
+    console.log('⚠️ ESP32 MQTT: Cliente fuera de línea.');
+  });
+
   cliente.on('message', (topico, mensaje) => {
+    const rawMsg = mensaje.toString();
+    console.log(`📩 ESP32 MQTT: Mensaje recibido en [${topico}] -> ${rawMsg}`);
+    
     // Usar validación flex por inclusión para evitar discrepancias de rutas SSL
     if (topico.includes('comandos')) {
-      const rawMsg = mensaje.toString();
       console.log(`🚨 ESP32: Comando manual recibido: "${rawMsg}"`);
       
       let accion = "";
