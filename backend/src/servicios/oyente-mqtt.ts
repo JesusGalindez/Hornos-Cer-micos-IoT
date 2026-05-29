@@ -144,7 +144,6 @@ export const iniciarOyenteMQTT = () => {
   // Evento: Error de Conexión
   let ultimoErrorReg = 0;
   cliente.on('error', (error: any) => {
-    // Evitar spam de logs cada 1 segundo si el broker no está conectado
     const ahora = Date.now();
     if (ahora - ultimoErrorReg > 15000) {
       console.log('⚠️ Servicio MQTT en modo de espera: El Broker no está respondiendo temporalmente.', error.message);
