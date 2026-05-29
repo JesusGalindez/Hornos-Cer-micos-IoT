@@ -57,9 +57,9 @@ app.get('/api/salud', (req, res) => {
 async function sembrarDatosPrueba() {
   console.log('🌱 Iniciando verificación y auto-siembra de cuentas de prueba...');
   try {
-    const hashAlberto = await bcrypt.hash('alberto123', 10);
-    const hashSebastian = await bcrypt.hash('sebastian123', 10);
-    const hashAbel = await bcrypt.hash('abel123', 10);
+    const hashAlberto = await bcrypt.hash('Alb.Cloud.2026!', 10);
+    const hashSebastian = await bcrypt.hash('Seb.Cloud.2026!', 10);
+    const hashAbel = await bcrypt.hash('Abe.Cloud.2026!', 10);
     
     const tokenSebastianHash = await bcrypt.hash('token_sebastian_123', 10);
     const tokenAbelHash = await bcrypt.hash('token_abel_123', 10);
